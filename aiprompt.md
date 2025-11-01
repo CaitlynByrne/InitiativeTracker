@@ -1429,17 +1429,32 @@ docker-compose -f docker-compose.dev.yml up
 # 6. See both displays update in real-time!
 ```
 
-### **Next Development Priority (Phase 2)**
+### **Next Development Priority (Phase 2 - v1.0)**
 
-The MVP is complete! If continuing development for Phase 2, focus on:
+The MVP is complete! Phase 2 focuses on professional UI/UX improvements and enhanced functionality.
 
-1. ✅ ~~**Redis Integration**~~ - DONE! Already in production
-2. ✅ ~~**Integration Tests**~~ - DONE! All tests updated
-3. **Session Save/Restore UI** - Add manual save/load buttons (backend ready, ~1 hour)
-4. **Drag-and-Drop Reordering** - UI polish for initiative reordering (~4 hours)
-5. **ESP32 Player Devices** - Hardware component for players (~2-3 weeks)
-6. **Condition Tracking** - Track status effects like Stunned, Poisoned (~8 hours)
-7. **Turn History & Undo** - Rollback accidental turn advancement (~4 hours)
+**📋 See [PHASE2_PLAN.md](../PHASE2_PLAN.md) for comprehensive implementation guide**
+
+**Phase 2 Features (Web-Only, ~2-3 weeks):**
+
+1. **Session Save/Restore UI** (~3 hours) - Manual save/load with session browser
+2. **Drag-and-Drop Reordering** (~4 hours) - Visual initiative reordering with touch support
+3. **Creature Editing UI** (~6 hours) - Edit name, initiative, HP after creation
+4. **Creature Avatar Images** (~4 hours) - Upload/display creature portraits (auto-resize to 200x200)
+5. **Condition/Effect Tracking** (~8 hours) - D&D 5e conditions with duration tracking
+6. **Turn History & Undo** (~6 hours) - Rollback last 10 actions
+7. **Enhanced Pi Display Typography** (~2 hours) - Larger fonts for TV viewing (8rem+)
+8. **UI/UX Improvements** (~8 hours) - Keyboard shortcuts, confirmations, toasts, loading states
+9. **System Monitoring Dashboard** (~6 hours) - Uptime, client count, stats
+10. **Advanced Timer Features** (~4 hours) - Pause/resume functionality
+
+**Total Estimate:** ~63 hours (2-3 weeks)
+
+**Deferred to v2.0:**
+- ESP32 Player Devices (hardware)
+- Mobile native apps
+- VTT integration
+- Remote play features
 
 Your code is production-ready and can be deployed on a Raspberry Pi for real tabletop gaming sessions. The foundation is rock solid! 🎲
 
