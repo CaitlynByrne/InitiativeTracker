@@ -13,14 +13,14 @@
         :class="[
           'creature-card p-3 rounded border-2 transition-all',
           currentRound > 0 && index === currentTurnIndex
-            ? 'border-green-500 bg-green-900/20'
-            : 'border-gray-600 bg-gray-700'
+            ? getActiveCreatureClass(creature.type)
+            : getCreatureClass(creature.type)
         ]"
       >
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <!-- Initiative Badge -->
-            <div class="initiative-badge bg-blue-600 text-white font-bold px-3 py-1 rounded">
+            <div class="initiative-badge bg-gray-800 text-white font-bold px-3 py-1 rounded border border-gray-600">
               {{ creature.initiative }}
             </div>
 
@@ -28,11 +28,11 @@
             <div>
               <div class="creature-name font-bold text-white">
                 {{ creature.name }}
-                <span v-if="currentRound > 0 && index === currentTurnIndex" class="ml-2 text-green-400">
+                <span v-if="currentRound > 0 && index === currentTurnIndex" class="ml-2 text-yellow-400 animate-pulse">
                   ← ACTIVE
                 </span>
               </div>
-              <div class="creature-type text-sm text-gray-400 capitalize">
+              <div :class="['creature-type text-sm capitalize', getTypeTextColor(creature.type)]">
                 {{ creature.type }}
               </div>
             </div>
@@ -81,4 +81,46 @@ defineProps<{
 defineEmits<{
   (e: 'remove', id: string): void;
 }>();
+
+// Get creature class based on type (inactive state)
+const getCreatureClass = (type: string): string => {
+  switch (type) {
+    case 'player':
+      return 'border-blue-600 bg-blue-900/30';
+    case 'npc':
+      return 'border-green-600 bg-green-900/30';
+    case 'monster':
+      return 'border-red-600 bg-red-900/30';
+    default:
+      return 'border-gray-600 bg-gray-700';
+  }
+};
+
+// Get creature class for active turn
+const getActiveCreatureClass = (type: string): string => {
+  switch (type) {
+    case 'player':
+      return 'border-blue-400 bg-blue-800/50 ring-2 ring-blue-400';
+    case 'npc':
+      return 'border-green-400 bg-green-800/50 ring-2 ring-green-400';
+    case 'monster':
+      return 'border-red-400 bg-red-800/50 ring-2 ring-red-400';
+    default:
+      return 'border-green-500 bg-green-900/20';
+  }
+};
+
+// Get text color for creature type
+const getTypeTextColor = (type: string): string => {
+  switch (type) {
+    case 'player':
+      return 'text-blue-400';
+    case 'npc':
+      return 'text-green-400';
+    case 'monster':
+      return 'text-red-400';
+    default:
+      return 'text-gray-400';
+  }
+};
 </script>
