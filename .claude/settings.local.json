@@ -16,7 +16,8 @@
       "Bash(docker exec:*)",
       "Bash(timeout 5 docker logs:*)",
       "Bash(docker restart:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm init:*)"
     ],
     "deny": [],
     "ask": []

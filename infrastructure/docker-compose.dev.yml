@@ -58,6 +58,29 @@ services:
       - server
     restart: unless-stopped
 
+  # Pi Display Web Application (Development with hot reload)
+  pi-display:
+    build:
+      context: ../web/pi-display
+      dockerfile: Dockerfile.dev
+    container_name: initiative-pi-display-dev
+    ports:
+      - "5174:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_SERVER_URL=http://localhost:3000
+    volumes:
+      - ../web/pi-display/src:/app/src
+      - ../web/pi-display/index.html:/app/index.html
+      - ../web/pi-display/vite.config.ts:/app/vite.config.ts
+      - ../web/pi-display/tailwind.config.js:/app/tailwind.config.js
+      - ../web/pi-display/tsconfig.json:/app/tsconfig.json
+      - ../web/pi-display/tsconfig.node.json:/app/tsconfig.node.json
+      - ../web/pi-display/postcss.config.js:/app/postcss.config.js
+    depends_on:
+      - server
+    restart: unless-stopped
+
 volumes:
   redis-data:
     driver: local
