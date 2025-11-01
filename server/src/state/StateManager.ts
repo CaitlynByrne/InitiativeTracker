@@ -7,7 +7,7 @@
 
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import { GameState, Creature, StateUpdateResult } from '../types';
+import { GameState, Creature, StateUpdateResult, CreatureType } from '../types';
 import { ValidationUtils } from '../utils/validation';
 
 export class StateManager extends EventEmitter {
@@ -33,21 +33,11 @@ export class StateManager extends EventEmitter {
    * Create default empty state
    */
   private createDefaultState(): GameState {
-    const now = new Date().toISOString();
     return {
-      session_id: uuidv4(),
-      current_turn_index: 0,
-      round: 1,
-      timer: {
-        active: false,
-        remaining: 0,
-        duration: 0,
-      },
-      initiative_order: [],
-      metadata: {
-        created_at: now,
-        last_modified: now,
-      },
+      creatures: [],
+      currentTurnIndex: -1, // -1 indicates no combat has started
+      currentRound: 0,      // 0 indicates combat hasn't started yet
+      timer: null,
     };
   }
 
@@ -63,8 +53,24 @@ export class StateManager extends EventEmitter {
    */
   private updateState(updater: (state: GameState) => void): void {
     updater(this.state);
-    this.state.metadata.last_modified = new Date().toISOString();
     this.emit('stateChanged', this.getState());
+  }
+
+  /**
+   * Get creature type priority for initiative tie-breaking
+   * Lower number = higher priority (goes first)
+   */
+  private getTypePriority(type: CreatureType): number {
+    switch (type) {
+      case 'player':
+        return 1;
+      case 'monster':
+        return 2;
+      case 'npc':
+        return 3;
+      default:
+        return 4;
+    }
   }
 
   /**
@@ -84,20 +90,43 @@ export class StateManager extends EventEmitter {
     };
 
     this.updateState((state) => {
-      // Insert creature in initiative order (sorted by initiative, descending)
-      const insertIndex = state.initiative_order.findIndex(
-        (c) => c.initiative < creature.initiative
-      );
+      // Find the correct position for the creature
+      // Sort by initiative (descending), then by type priority (ascending)
+      let insertIndex = -1;
 
-      if (insertIndex === -1) {
-        state.initiative_order.push(creature);
-      } else {
-        state.initiative_order.splice(insertIndex, 0, creature);
+      for (let i = 0; i < state.creatures.length; i++) {
+        const existingCreature = state.creatures[i];
+
+        // If new creature has higher initiative, insert here
+        if (creature.initiative > existingCreature.initiative) {
+          insertIndex = i;
+          break;
+        }
+
+        // If initiatives are tied, sort by creature type
+        if (creature.initiative === existingCreature.initiative) {
+          const newTypePriority = this.getTypePriority(creature.type);
+          const existingTypePriority = this.getTypePriority(existingCreature.type);
+
+          // If new creature has higher priority (lower number), insert here
+          if (newTypePriority < existingTypePriority) {
+            insertIndex = i;
+            break;
+          }
+        }
       }
 
-      // Adjust current_turn_index if we inserted before current turn
-      if (insertIndex !== -1 && insertIndex <= state.current_turn_index) {
-        state.current_turn_index++;
+      if (insertIndex === -1) {
+        // Add to the end if no better position found
+        state.creatures.push(creature);
+      } else {
+        // Insert at the found position
+        state.creatures.splice(insertIndex, 0, creature);
+      }
+
+      // Adjust currentTurnIndex if we inserted before current turn AND combat has started
+      if (state.currentRound > 0 && insertIndex !== -1 && insertIndex <= state.currentTurnIndex) {
+        state.currentTurnIndex++;
       }
     });
 
@@ -114,7 +143,7 @@ export class StateManager extends EventEmitter {
       return { success: false, error: validationError };
     }
 
-    const creatureIndex = this.state.initiative_order.findIndex((c) => c.id === creatureId);
+    const creatureIndex = this.state.creatures.findIndex((c) => c.id === creatureId);
 
     if (creatureIndex === -1) {
       return {
@@ -128,18 +157,23 @@ export class StateManager extends EventEmitter {
     }
 
     this.updateState((state) => {
-      state.initiative_order.splice(creatureIndex, 1);
+      state.creatures.splice(creatureIndex, 1);
 
-      // Adjust current_turn_index if needed
-      if (state.initiative_order.length === 0) {
-        state.current_turn_index = 0;
-      } else if (creatureIndex < state.current_turn_index) {
-        state.current_turn_index--;
-      } else if (creatureIndex === state.current_turn_index) {
-        // If we removed the current creature, keep index but it now points to next creature
-        // Unless we removed the last creature, then wrap around
-        if (state.current_turn_index >= state.initiative_order.length) {
-          state.current_turn_index = 0;
+      // Adjust currentTurnIndex if needed
+      if (state.creatures.length === 0) {
+        // No creatures left, reset combat state
+        state.currentTurnIndex = -1;
+        state.currentRound = 0;
+      } else if (state.currentRound > 0) {
+        // Only adjust index if combat has started
+        if (creatureIndex < state.currentTurnIndex) {
+          state.currentTurnIndex--;
+        } else if (creatureIndex === state.currentTurnIndex) {
+          // If we removed the current creature, keep index but it now points to next creature
+          // Unless we removed the last creature, then wrap around
+          if (state.currentTurnIndex >= state.creatures.length) {
+            state.currentTurnIndex = 0;
+          }
         }
       }
     });
@@ -151,28 +185,36 @@ export class StateManager extends EventEmitter {
    * Advance to next turn
    */
   nextTurn(): StateUpdateResult {
-    if (this.state.initiative_order.length === 0) {
+    if (this.state.creatures.length === 0) {
       return {
         success: false,
         error: {
-          field: 'initiative_order',
+          field: 'creatures',
           message: 'Cannot advance turn: no creatures in initiative',
         },
       };
     }
 
     this.updateState((state) => {
-      state.current_turn_index++;
+      // If combat hasn't started yet, start it
+      if (state.currentRound === 0) {
+        state.currentRound = 1;
+        state.currentTurnIndex = 0;
+      } else {
+        state.currentTurnIndex++;
 
-      // Wrap around and increment round
-      if (state.current_turn_index >= state.initiative_order.length) {
-        state.current_turn_index = 0;
-        state.round++;
+        // Wrap around and increment round
+        if (state.currentTurnIndex >= state.creatures.length) {
+          state.currentTurnIndex = 0;
+          state.currentRound++;
+        }
       }
 
       // Reset timer on turn change
-      state.timer.active = false;
-      state.timer.remaining = 0;
+      if (state.timer) {
+        state.timer.isActive = false;
+        state.timer.remainingSeconds = 0;
+      }
     });
 
     return { success: true, state: this.getState() };
@@ -181,44 +223,42 @@ export class StateManager extends EventEmitter {
   /**
    * Reorder initiative
    */
-  reorderInitiative(newOrder: string[]): StateUpdateResult {
-    // Validate that newOrder contains same creatures
-    if (newOrder.length !== this.state.initiative_order.length) {
+  reorderInitiative(fromIndex: number, toIndex: number): StateUpdateResult {
+    // Validate indices
+    if (
+      fromIndex < 0 ||
+      fromIndex >= this.state.creatures.length ||
+      toIndex < 0 ||
+      toIndex >= this.state.creatures.length
+    ) {
       return {
         success: false,
         error: {
-          field: 'order',
-          message: 'New order must contain all creatures',
+          field: 'index',
+          message: 'Invalid index for reordering',
         },
       };
     }
 
-    const currentIds = new Set(this.state.initiative_order.map((c) => c.id));
-    const newIds = new Set(newOrder);
-
-    if (currentIds.size !== newIds.size || ![...currentIds].every((id) => newIds.has(id))) {
-      return {
-        success: false,
-        error: {
-          field: 'order',
-          message: 'New order must contain exactly the same creature IDs',
-        },
-      };
+    if (fromIndex === toIndex) {
+      return { success: true, state: this.getState() };
     }
-
-    // Find current creature to preserve turn
-    const currentCreatureId = this.state.initiative_order[this.state.current_turn_index]?.id;
 
     this.updateState((state) => {
-      // Reorder creatures
-      const creatureMap = new Map(state.initiative_order.map((c) => [c.id, c]));
-      state.initiative_order = newOrder.map((id) => creatureMap.get(id)!);
+      const creature = state.creatures[fromIndex];
+      state.creatures.splice(fromIndex, 1);
+      state.creatures.splice(toIndex, 0, creature);
 
-      // Update current_turn_index to point to same creature
-      if (currentCreatureId) {
-        state.current_turn_index = state.initiative_order.findIndex(
-          (c) => c.id === currentCreatureId
-        );
+      // Only update currentTurnIndex if combat has started
+      if (state.currentRound > 0 && state.currentTurnIndex >= 0) {
+        // Update currentTurnIndex if affected by the reorder
+        if (state.currentTurnIndex === fromIndex) {
+          state.currentTurnIndex = toIndex;
+        } else if (fromIndex < state.currentTurnIndex && toIndex >= state.currentTurnIndex) {
+          state.currentTurnIndex--;
+        } else if (fromIndex > state.currentTurnIndex && toIndex <= state.currentTurnIndex) {
+          state.currentTurnIndex++;
+        }
       }
     });
 
@@ -235,9 +275,11 @@ export class StateManager extends EventEmitter {
     }
 
     this.updateState((state) => {
-      state.timer.active = true;
-      state.timer.duration = duration;
-      state.timer.remaining = duration;
+      state.timer = {
+        isActive: true,
+        totalSeconds: duration,
+        remainingSeconds: duration,
+      };
     });
 
     return { success: true, state: this.getState() };
@@ -248,8 +290,10 @@ export class StateManager extends EventEmitter {
    */
   stopTimer(): StateUpdateResult {
     this.updateState((state) => {
-      state.timer.active = false;
-      state.timer.remaining = 0;
+      if (state.timer) {
+        state.timer.isActive = false;
+        state.timer.remainingSeconds = 0;
+      }
     });
 
     return { success: true, state: this.getState() };
@@ -259,16 +303,18 @@ export class StateManager extends EventEmitter {
    * Tick timer (called every second)
    */
   tickTimer(): StateUpdateResult {
-    if (!this.state.timer.active) {
+    if (!this.state.timer || !this.state.timer.isActive) {
       return { success: false, error: { field: 'timer', message: 'Timer is not active' } };
     }
 
     this.updateState((state) => {
-      state.timer.remaining = Math.max(0, state.timer.remaining - 1);
+      if (state.timer) {
+        state.timer.remainingSeconds = Math.max(0, state.timer.remainingSeconds - 1);
 
-      if (state.timer.remaining === 0) {
-        state.timer.active = false;
-        this.emit('timerExpired');
+        if (state.timer.remainingSeconds === 0) {
+          state.timer.isActive = false;
+          this.emit('timerExpired');
+        }
       }
     });
 
@@ -290,5 +336,52 @@ export class StateManager extends EventEmitter {
   loadState(state: GameState): void {
     this.state = state;
     this.emit('stateChanged', this.getState());
+  }
+
+  /**
+   * Update creature properties
+   */
+  updateCreature(id: string, updates: Partial<Creature>): StateUpdateResult {
+    const index = this.state.creatures.findIndex(c => c.id === id);
+    if (index === -1) {
+      return {
+        success: false,
+        error: {
+          field: 'id',
+          message: 'Creature not found',
+          value: id,
+        },
+      };
+    }
+
+    const creature = { ...this.state.creatures[index], ...updates };
+    const validationError = ValidationUtils.validateCreature(creature);
+    if (validationError) {
+      return { success: false, error: validationError };
+    }
+
+    this.updateState((state) => {
+      state.creatures[index] = creature;
+    });
+
+    return { success: true, state: this.getState() };
+  }
+
+  /**
+   * Get creature by ID
+   */
+  getCreature(id: string): Creature | undefined {
+    return this.state.creatures.find(c => c.id === id);
+  }
+
+  /**
+   * Get current turn creature
+   */
+  getCurrentCreature(): Creature | undefined {
+    // Return undefined if combat hasn't started or index is invalid
+    if (this.state.currentTurnIndex < 0 || this.state.currentTurnIndex >= this.state.creatures.length) {
+      return undefined;
+    }
+    return this.state.creatures[this.state.currentTurnIndex];
   }
 }

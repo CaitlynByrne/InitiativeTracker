@@ -30,41 +30,62 @@ Initiative Tracker coordinates combat turn order across multiple devices in real
 
 ## Quick Start
 
-### Development Setup
+### Prerequisites
 
-1. **Start Redis** (required for state persistence):
+- Docker Desktop installed and running
+- Git for version control
+- Make (optional, for simplified commands)
 
-   ```bash
-   cd infrastructure
-   docker-compose -f docker-compose.dev.yml up -d
-   ```
+### Development Setup (All in Docker)
 
-2. **Start WebSocket Server**:
+#### Using Make (Recommended)
 
-   ```bash
-   cd server
-   npm install
-   npm run dev
-   ```
+```bash
+# Initial setup - builds containers and installs dependencies
+make setup
 
-   Server runs on `http://localhost:3000`
+# Start development environment with hot reload
+make dev
 
-3. **Start DM Console**:
+# View logs
+make dev-logs
+```
 
-   ```bash
-   cd web/dm-console
-   npm install
-   npm run dev
-   ```
+#### Using Docker Compose
 
-   DM Console runs on `http://localhost:5173`
+```bash
+# Start entire development stack
+cd infrastructure
+docker-compose -f docker-compose.dev.yml up
+
+# Or run in background
+docker-compose -f docker-compose.dev.yml up -d
+```
 
 ### Verify Setup
 
-- Open `http://localhost:3000/health` - should show server status
-- Open `http://localhost:5173` - should show DM Console with connection indicator
+- Server: `http://localhost:3000/health` - should show server status
+- DM Console: `http://localhost:5173` - should show DM Console with connection indicator
+- Redis: Port 6379 (use `make shell-redis` to access Redis CLI)
 
-See [docs/deployment/setup-guide.md](docs/deployment/setup-guide.md) for complete deployment instructions.
+### Testing (All in Docker)
+
+```bash
+# Run all tests
+make test
+
+# Run specific tests
+make test-server      # Server tests only
+make test-dm         # DM console tests only
+make test-integration # Integration tests
+
+# Run with options
+make test-watch      # Watch mode for development
+make test-coverage   # Generate coverage reports
+```
+
+See [docs/testing/containerized-testing.md](docs/testing/containerized-testing.md) for complete testing documentation.
+See [docs/deployment/setup-guide.md](docs/deployment/setup-guide.md) for production deployment instructions.
 
 ## Documentation
 
@@ -83,8 +104,20 @@ InitiativeTracker/
 │   └── pi-display/     # Shared display
 ├── firmware/            # ESP32 firmware
 ├── infrastructure/      # Docker configs
+├── tests/               # Integration tests
+├── scripts/             # Helper scripts
+├── Makefile            # Simplified commands
 └── docs/               # Documentation
 ```
+
+## Development Approach
+
+All development and testing runs inside Docker containers:
+- **No local Node.js installation required**
+- **Consistent environment across all developers**
+- **Isolated dependencies and configurations**
+- **Hot reload enabled for rapid development**
+- **All tests run in containerized environment**
 
 ## License
 

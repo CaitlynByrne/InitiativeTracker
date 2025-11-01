@@ -2,34 +2,30 @@
  * Core type definitions for the Initiative Tracker system
  */
 
-export type CreatureType = 'player' | 'npc';
+export type CreatureType = 'player' | 'npc' | 'monster';
 
 export interface Creature {
   id: string;
   name: string;
   initiative: number;
   type: CreatureType;
+  hp?: number;
+  maxHp?: number;
+  conditions?: string[];
   device_id?: string;
 }
 
 export interface Timer {
-  active: boolean;
-  remaining: number;
-  duration: number;
-}
-
-export interface GameStateMetadata {
-  created_at: string;
-  last_modified: string;
+  remainingSeconds: number;
+  totalSeconds: number;
+  isActive: boolean;
 }
 
 export interface GameState {
-  session_id: string;
-  current_turn_index: number;
-  round: number;
-  timer: Timer;
-  initiative_order: Creature[];
-  metadata: GameStateMetadata;
+  creatures: Creature[];
+  currentTurnIndex: number;
+  currentRound: number;
+  timer: Timer | null;
 }
 
 export interface ValidationError {

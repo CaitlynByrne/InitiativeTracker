@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # Redis service for testing
+  redis-test:
+    image: redis:7-alpine
+    container_name: initiative-redis-test
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    volumes:
+      - redis-test-data:/data
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Server test container - runs tests with coverage
+  server-test:
+    build:
+      context: ../server
+      dockerfile: Dockerfile.test
+    container_name: initiative-server-test
+    depends_on:
+      redis-test:
+        condition: service_healthy
+    environment:
+      NODE_ENV: test
+      REDIS_URL: redis://redis-test:6379
+      PORT: 3001
+      LOG_LEVEL: error  # Reduce noise during tests
+    volumes:
+      # Mount source code for live test updates
+      - ../server/src:/app/src:ro
+      - ../server/tests:/app/tests
+      - ../server/coverage:/app/coverage
+      # Use container node_modules
+      - server-test-modules:/app/node_modules
+    networks:
+      - test-network
+    command: npm run test:watch
+
+  # DM Console test container
+  dm-console-test:
+    build:
+      context: ../web/dm-console
+      dockerfile: Dockerfile.test
+    container_name: initiative-dm-console-test
+    depends_on:
+      - server-test
+    environment:
+      NODE_ENV: test
+      VITE_API_URL: http://server-test:3001
+    volumes:
+      # Mount source code for live test updates
+      - ../web/dm-console/src:/app/src:ro
+      - ../web/dm-console/tests:/app/tests
+      - ../web/dm-console/coverage:/app/coverage
+      # Use container node_modules
+      - dm-console-test-modules:/app/node_modules
+    networks:
+      - test-network
+    command: npm run test:watch
+
+  # Integration test runner - runs E2E tests
+  integration-test:
+    build:
+      context: ../tests
+      dockerfile: Dockerfile.integration
+    container_name: initiative-integration-test
+    depends_on:
+      - server-test
+      - dm-console-test
+    environment:
+      NODE_ENV: test
+      SERVER_URL: http://server-test:3001
+      DM_CONSOLE_URL: http://dm-console-test:5173
+    volumes:
+      - ../tests:/app/tests
+      - ../tests/results:/app/results
+      - integration-test-modules:/app/node_modules
+    networks:
+      - test-network
+    profiles:
+      - integration  # Only runs when explicitly requested
+
+networks:
+  test-network:
+    driver: bridge
+
+volumes:
+  redis-test-data:
+  server-test-modules:
+  dm-console-test-modules:
+  integration-test-modules:

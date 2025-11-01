@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import { StateManager } from './state/StateManager';
 import { EventHandlers } from './events/handlers';
 import { TimerManager } from './timer/TimerManager';
+import { logger } from './utils/logger';
 
 const app = express();
 const httpServer = createServer(app);
@@ -14,7 +15,7 @@ const io = new Server(httpServer, {
   },
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Initialize state manager, timer manager, and event handlers
 const stateManager = StateManager.getInstance();
@@ -37,38 +38,38 @@ app.get('/state', (_req: Request, res: Response) => {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log(`Client connected: ${socket.id}`);
+  logger.info(`Client connected: ${socket.id}`);
 
   // Register all event handlers
   eventHandlers.registerHandlers(socket);
 
   socket.on('disconnect', (reason) => {
-    console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
+    logger.info(`Client disconnected: ${socket.id}, reason: ${reason}`);
   });
 });
 
 // Start server
 httpServer.listen(PORT, () => {
-  console.log(`Initiative Tracker Server running on port ${PORT}`);
-  console.log(`WebSocket server ready`);
-  console.log(`Health check available at http://localhost:${PORT}/health`);
+  logger.info(`Initiative Tracker Server running on port ${PORT}`);
+  logger.info(`WebSocket server ready`);
+  logger.info(`Health check available at http://localhost:${PORT}/health`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, closing server...');
+  logger.info('SIGTERM received, closing server...');
   timerManager.destroy();
   httpServer.close(() => {
-    console.log('Server closed');
+    logger.info('Server closed');
     process.exit(0);
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, closing server...');
+  logger.info('SIGINT received, closing server...');
   timerManager.destroy();
   httpServer.close(() => {
-    console.log('Server closed');
+    logger.info('Server closed');
     process.exit(0);
   });
 });

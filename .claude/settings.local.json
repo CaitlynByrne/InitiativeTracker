@@ -5,7 +5,12 @@
       "Bash(docker-compose:*)",
       "Bash(timeout 5 docker-compose:*)",
       "Bash(npm run dev:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(tree:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

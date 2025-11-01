@@ -5,6 +5,7 @@
  */
 
 import { StateManager } from '../state/StateManager';
+import { logger } from '../utils/logger';
 
 export class TimerManager {
   private stateManager: StateManager;
@@ -16,10 +17,10 @@ export class TimerManager {
 
     // Listen to state changes to manage timer
     this.stateManager.on('stateChanged', (state) => {
-      if (state.timer.active && !this.interval) {
+      if (state.timer && state.timer.isActive && !this.interval) {
         // Timer was started, begin ticking
         this.startTicking();
-      } else if (!state.timer.active && this.interval) {
+      } else if ((!state.timer || !state.timer.isActive) && this.interval) {
         // Timer was stopped, clear interval
         this.stopTicking();
       }
@@ -28,7 +29,7 @@ export class TimerManager {
     // Listen to timer expiration
     this.stateManager.on('timerExpired', () => {
       this.stopTicking();
-      console.log('Timer expired!');
+      logger.info('Timer expired!');
     });
   }
 
@@ -50,7 +51,7 @@ export class TimerManager {
       return; // Already ticking
     }
 
-    console.log('Timer ticking started');
+    logger.info('Timer ticking started');
     this.interval = setInterval(() => {
       this.tick();
     }, 1000); // Tick every 1 second
@@ -63,7 +64,7 @@ export class TimerManager {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
-      console.log('Timer ticking stopped');
+      logger.info('Timer ticking stopped');
     }
   }
 

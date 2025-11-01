@@ -1,0 +1,20 @@
+# Test container for server
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies including dev dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy TypeScript config and source files
+COPY tsconfig.json ./
+COPY jest.config.js ./
+COPY .eslintrc.json ./
+COPY .prettierrc ./
+
+# Create necessary directories
+RUN mkdir -p src tests coverage
+
+# Default command runs tests in watch mode
+CMD ["npm", "run", "test:watch"]

@@ -25,18 +25,18 @@ export class ValidationUtils {
       };
     }
 
-    if (data.initiative < -100 || data.initiative > 100) {
+    if (data.initiative < 1 || data.initiative > 30) {
       return {
         field: 'initiative',
-        message: 'Initiative must be between -100 and 100',
+        message: 'Initiative must be between 1 and 30',
         value: data.initiative,
       };
     }
 
-    if (!data.type || !['player', 'npc'].includes(data.type)) {
+    if (!data.type || !['player', 'npc', 'monster'].includes(data.type)) {
       return {
         field: 'type',
-        message: 'Creature type must be either "player" or "npc"',
+        message: 'Creature type must be "player", "npc", or "monster"',
         value: data.type,
       };
     }

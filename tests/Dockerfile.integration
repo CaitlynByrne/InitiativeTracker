@@ -1,0 +1,17 @@
+# Integration test container
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies for integration testing
+COPY package*.json ./
+RUN npm install
+
+# Copy test configuration
+COPY jest.config.js ./
+
+# Create test directories
+RUN mkdir -p tests results
+
+# Default command runs integration tests
+CMD ["npm", "run", "test:integration"]

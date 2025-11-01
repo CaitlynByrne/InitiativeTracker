@@ -1,0 +1,28 @@
+# Test container for DM Console
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies including dev dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy configuration files
+COPY vite.config.ts ./
+COPY vitest.config.ts ./
+COPY tsconfig.json ./
+COPY tsconfig.node.json ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY .eslintrc.cjs ./
+COPY .prettierrc ./
+COPY index.html ./
+
+# Create necessary directories
+RUN mkdir -p src tests coverage public
+
+# Copy public assets if any
+COPY public ./public
+
+# Default command runs tests in watch mode
+CMD ["npm", "run", "test:unit"]
