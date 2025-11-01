@@ -4,7 +4,7 @@ This guide explains how to run all development and testing tasks inside Docker c
 
 ## Overview
 
-All development and testing for the Initiative Tracker project now runs inside Docker containers. This approach ensures:
+All development and testing for the Initiative Tracker project runs inside Docker containers. This approach ensures:
 
 - **Consistency**: Same environment for all developers
 - **Isolation**: No need to install Node.js or dependencies locally
@@ -15,59 +15,67 @@ All development and testing for the Initiative Tracker project now runs inside D
 
 - Docker Desktop installed and running
 - Git for version control
-- Make (optional, for simplified commands)
+- Windows, macOS, or Linux operating system
 
 ## Quick Start
 
-### Using Make (Recommended)
+### Windows Users (Batch Scripts)
 
-```bash
+```batch
 # Initial setup
-make setup
+scripts\setup.bat
 
 # Start development environment
-make dev
+scripts\dev-start.bat
 
 # Run all tests
-make test
+scripts\test-all.bat
 
 # Run specific component tests
-make test-server      # Server tests only
-make test-dm         # DM console tests only
-make test-integration # Integration tests only
+scripts\test-server.bat      # Server tests only
+scripts\test-dm-console.bat  # DM console tests only
 
-# Run tests with options
-make test-watch      # Watch mode
-make test-coverage   # With coverage report
+# Run tests in watch mode
+scripts\test-watch-server.bat  # Server watch mode
+scripts\test-watch-dm.bat      # DM console watch mode
 ```
 
-### Using Docker Compose Directly
+### Using Docker Compose Directly (All Platforms)
 
 ```bash
 # Start development environment
 docker-compose -f infrastructure/docker-compose.dev.yml up
 
-# Run all tests
-docker-compose -f infrastructure/docker-compose.test.yml up
+# Start test infrastructure
+docker-compose -f infrastructure/docker-compose.test.yml up -d redis-test
 
-# Run specific service tests
+# Run server tests
 docker-compose -f infrastructure/docker-compose.test.yml run --rm server-test npm test
+
+# Run DM console tests
 docker-compose -f infrastructure/docker-compose.test.yml run --rm dm-console-test npm test
+
+# Run integration tests
+docker-compose -f infrastructure/docker-compose.test.yml --profile integration run --rm integration-test
+
+# Clean up
+docker-compose -f infrastructure/docker-compose.test.yml down
 ```
 
-### Using Test Scripts
+### Linux/Mac Users (Make)
 
 ```bash
-# Windows
-scripts\test.bat [service] [options]
+# Initial setup
+make setup
 
-# Linux/Mac
-./scripts/test.sh [service] [options]
+# Start development
+make dev
 
-# Examples
-scripts\test.bat all --watch        # All tests in watch mode
-scripts\test.bat server --coverage  # Server tests with coverage
-scripts\test.bat dm-console         # DM console tests only
+# Run tests
+make test              # All tests
+make test-server       # Server only
+make test-dm          # DM console only
+make test-watch       # Watch mode
 ```
 
 ## Testing Architecture
@@ -133,6 +141,35 @@ describe('InitiativeList', () => {
 
 ## Test Commands Reference
 
+### Windows Batch Scripts
+
+Located in `scripts/` folder:
+
+```batch
+scripts\test-all.bat           # Run all tests
+scripts\test-server.bat        # Server tests only
+scripts\test-dm-console.bat    # DM console tests only
+scripts\test-watch.bat         # All tests in watch mode
+scripts\test-watch-server.bat  # Server watch mode
+scripts\test-watch-dm.bat      # DM console watch mode
+```
+
+### Docker Compose Commands
+
+```bash
+# Start test infrastructure
+docker-compose -f infrastructure/docker-compose.test.yml up -d redis-test
+
+# Run specific tests
+docker-compose -f infrastructure/docker-compose.test.yml run --rm server-test npm test
+docker-compose -f infrastructure/docker-compose.test.yml run --rm dm-console-test npm test
+docker-compose -f infrastructure/docker-compose.test.yml run --rm server-test npm run test:watch
+docker-compose -f infrastructure/docker-compose.test.yml run --rm dm-console-test npm run test:unit
+
+# Clean up
+docker-compose -f infrastructure/docker-compose.test.yml down
+```
+
 ### Package.json Scripts
 
 Both server and DM console have Docker-aware test scripts:
@@ -148,19 +185,6 @@ Both server and DM console have Docker-aware test scripts:
     "test:docker:coverage": "..."      // Docker coverage
   }
 }
-```
-
-### Make Commands
-
-```bash
-make test              # Run all tests
-make test-server       # Server tests only
-make test-dm          # DM console tests only
-make test-integration  # Integration tests
-make test-watch       # Watch mode
-make test-coverage    # Coverage reports
-make test-build       # Build test containers
-make test-down        # Stop test containers
 ```
 
 ## Coverage Reports
@@ -185,17 +209,44 @@ open web/dm-console/coverage/index.html
 
 ### Interactive Test Debugging
 
+#### Windows
+
+```batch
+# Open shell in development containers
+scripts\shell-server.bat
+scripts\shell-dm.bat
+scripts\shell-redis.bat
+
+# Or use docker-compose directly
+docker-compose -f infrastructure\docker-compose.test.yml run --rm server-test sh
+docker-compose -f infrastructure\docker-compose.test.yml run --rm dm-console-test sh
+```
+
+#### All Platforms
+
 ```bash
 # Open shell in test container
 docker-compose -f infrastructure/docker-compose.test.yml run --rm server-test sh
 docker-compose -f infrastructure/docker-compose.test.yml run --rm dm-console-test sh
 
-# Run tests interactively
+# Run tests interactively once in shell
 npm test
 npm run test:watch
 ```
 
 ### View Test Logs
+
+#### Windows
+
+```batch
+# View development logs
+scripts\dev-logs.bat
+
+# Or use docker-compose directly
+docker-compose -f infrastructure\docker-compose.test.yml logs -f
+```
+
+#### All Platforms
 
 ```bash
 # View all test container logs
@@ -260,15 +311,28 @@ jobs:
 
 ### Clean Up
 
+#### Windows
+
+```batch
+# Clean all containers and artifacts
+scripts\clean-all.bat
+
+# Stop specific environments
+scripts\dev-stop.bat
+```
+
+#### Using Docker Compose
+
 ```bash
 # Stop all test containers
-make test-down
+docker-compose -f infrastructure/docker-compose.test.yml down
 
-# Clean all test artifacts
-make clean
+# Stop development containers
+docker-compose -f infrastructure/docker-compose.dev.yml down
 
-# Full reset (removes images too)
-make reset
+# Remove volumes as well
+docker-compose -f infrastructure/docker-compose.test.yml down -v
+docker-compose -f infrastructure/docker-compose.dev.yml down -v
 ```
 
 ## Best Practices

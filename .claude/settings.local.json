@@ -10,7 +10,13 @@
       "Bash(docker stop:*)",
       "Bash(docker rm:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker exec:*)",
+      "Bash(timeout 5 docker logs:*)",
+      "Bash(docker restart:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

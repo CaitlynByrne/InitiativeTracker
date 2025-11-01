@@ -14,7 +14,8 @@ export function useGameState() {
   const error = ref<string | null>(null);
 
   const connect = () => {
-    socket.value = io('http://localhost:3001');
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    socket.value = io(apiUrl);
 
     socket.value.on('connect', () => {
       connected.value = true;
@@ -37,10 +38,7 @@ export function useGameState() {
   };
 
   const addCreature = (creature: Omit<Creature, 'id'>) => {
-    socket.value?.emit('creature:add', {
-      ...creature,
-      id: `creature-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    });
+    socket.value?.emit('creature:add', creature);
   };
 
   const removeCreature = (id: string) => {

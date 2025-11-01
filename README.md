@@ -34,54 +34,85 @@ Initiative Tracker coordinates combat turn order across multiple devices in real
 
 - Docker Desktop installed and running
 - Git for version control
-- Make (optional, for simplified commands)
+- Windows, macOS, or Linux
 
 ### Development Setup (All in Docker)
 
-#### Using Make (Recommended)
+#### Windows Users (Batch Scripts)
 
-```bash
+```batch
 # Initial setup - builds containers and installs dependencies
-make setup
+scripts\setup.bat
 
 # Start development environment with hot reload
-make dev
+scripts\dev-start.bat
+
+# Or start in background
+scripts\dev-start-bg.bat
 
 # View logs
-make dev-logs
+scripts\dev-logs.bat
+
+# Stop containers
+scripts\dev-stop.bat
 ```
 
-#### Using Docker Compose
+#### Using Docker Compose Directly (All Platforms)
 
 ```bash
-# Start entire development stack
-cd infrastructure
-docker-compose -f docker-compose.dev.yml up
+# Build and start development stack
+docker-compose -f infrastructure/docker-compose.dev.yml up --build
 
 # Or run in background
-docker-compose -f docker-compose.dev.yml up -d
+docker-compose -f infrastructure/docker-compose.dev.yml up -d
+
+# View logs
+docker-compose -f infrastructure/docker-compose.dev.yml logs -f
+
+# Stop containers
+docker-compose -f infrastructure/docker-compose.dev.yml down
 ```
 
 ### Verify Setup
 
 - Server: `http://localhost:3000/health` - should show server status
 - DM Console: `http://localhost:5173` - should show DM Console with connection indicator
-- Redis: Port 6379 (use `make shell-redis` to access Redis CLI)
+- Redis: Port 6379
 
 ### Testing (All in Docker)
 
-```bash
+#### Windows Users (Batch Scripts)
+
+```batch
 # Run all tests
-make test
+scripts\test-all.bat
 
 # Run specific tests
-make test-server      # Server tests only
-make test-dm         # DM console tests only
-make test-integration # Integration tests
+scripts\test-server.bat       # Server tests only
+scripts\test-dm-console.bat   # DM console tests only
 
-# Run with options
-make test-watch      # Watch mode for development
-make test-coverage   # Generate coverage reports
+# Watch mode for development
+scripts\test-watch-server.bat  # Server tests in watch mode
+scripts\test-watch-dm.bat      # DM console tests in watch mode
+```
+
+#### Using Docker Compose Directly (All Platforms)
+
+```bash
+# Start test infrastructure
+docker-compose -f infrastructure/docker-compose.test.yml up -d redis-test
+
+# Run server tests
+docker-compose -f infrastructure/docker-compose.test.yml run --rm server-test npm test
+
+# Run DM console tests
+docker-compose -f infrastructure/docker-compose.test.yml run --rm dm-console-test npm test
+
+# Run integration tests
+docker-compose -f infrastructure/docker-compose.test.yml --profile integration run --rm integration-test
+
+# Clean up test containers
+docker-compose -f infrastructure/docker-compose.test.yml down
 ```
 
 See [docs/testing/containerized-testing.md](docs/testing/containerized-testing.md) for complete testing documentation.
@@ -93,6 +124,32 @@ See [docs/deployment/setup-guide.md](docs/deployment/setup-guide.md) for product
 - [User Stories](docs/user-stories/README.md)
 - [API Documentation](docs/api/websocket-events.md)
 - [Technical Requirements](docs/requirements/technical-requirements.md)
+
+## Available Scripts (Windows)
+
+Located in the `scripts/` folder:
+
+### Development
+- `setup.bat` - Initial project setup
+- `dev-start.bat` - Start development environment
+- `dev-start-bg.bat` - Start in background
+- `dev-stop.bat` - Stop development environment
+- `dev-logs.bat` - View container logs
+- `dev-rebuild.bat` - Rebuild and restart containers
+
+### Testing
+- `test-all.bat` - Run all tests
+- `test-server.bat` - Run server tests only
+- `test-dm-console.bat` - Run DM console tests only
+- `test-watch.bat` - Run tests in watch mode
+- `test-watch-server.bat` - Server tests in watch mode
+- `test-watch-dm.bat` - DM console tests in watch mode
+
+### Utilities
+- `shell-server.bat` - Open shell in server container
+- `shell-dm.bat` - Open shell in DM console container
+- `shell-redis.bat` - Open Redis CLI
+- `clean-all.bat` - Clean all containers and test artifacts
 
 ## Project Structure
 
@@ -106,7 +163,7 @@ InitiativeTracker/
 ├── infrastructure/      # Docker configs
 ├── tests/               # Integration tests
 ├── scripts/             # Helper scripts
-├── Makefile            # Simplified commands
+├── Makefile            # Linux/Mac commands
 └── docs/               # Documentation
 ```
 
