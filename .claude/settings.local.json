@@ -18,7 +18,8 @@
       "Bash(docker restart:*)",
       "Bash(npm install:*)",
       "Bash(npm init:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
