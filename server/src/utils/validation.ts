@@ -2,7 +2,7 @@
  * Input validation utilities
  */
 
-import { Creature, CreatureType, ValidationError } from '../types';
+import { Creature, ValidationError } from '../types';
 
 export class ValidationUtils {
   /**

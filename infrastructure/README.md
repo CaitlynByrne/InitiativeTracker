@@ -9,7 +9,7 @@ Docker Compose configurations for development and production deployments.
 
 ## Development Setup
 
-Run the full stack (Redis + Server) with hot reload:
+Run the full stack (Redis + Server + DM Console) with hot reload:
 
 ```bash
 # Start all services
@@ -29,8 +29,9 @@ docker-compose -f docker-compose.dev.yml down -v
 
 - **Redis**: `localhost:6379` - State persistence
 - **Server**: `localhost:3000` - WebSocket server with hot reload
+- **DM Console**: `localhost:5173` - Web interface with hot reload
 
-The server automatically reloads when you modify files in `server/src/`.
+The server and DM console automatically reload when you modify files in their respective `src/` directories.
 
 ## Production Deployment
 
@@ -66,6 +67,7 @@ docker-compose ps
 # Check specific service logs
 docker-compose logs server
 docker-compose logs redis
+docker-compose logs dm-console
 ```
 
 ### Restart services

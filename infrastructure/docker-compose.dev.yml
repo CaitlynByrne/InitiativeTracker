@@ -37,6 +37,27 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # DM Console Web Application (Development with hot reload)
+  dm-console:
+    build:
+      context: ../web/dm-console
+      dockerfile: Dockerfile.dev
+    container_name: initiative-dm-console-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000
+    volumes:
+      - ../web/dm-console/src:/app/src
+      - ../web/dm-console/index.html:/app/index.html
+      - ../web/dm-console/vite.config.ts:/app/vite.config.ts
+      - ../web/dm-console/tailwind.config.js:/app/tailwind.config.js
+      - ../web/dm-console/tsconfig.json:/app/tsconfig.json
+    depends_on:
+      - server
+    restart: unless-stopped
+
 volumes:
   redis-data:
     driver: local
