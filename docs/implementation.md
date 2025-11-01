@@ -51,8 +51,9 @@ This plan breaks down development into four phases:
 - [ ] Initialize Node.js server project
   - npm init
   - Install core dependencies: `express`, `socket.io`, `redis`
-  - Setup TypeScript (optional but recommended)
-  - Configure ESLint/Prettier
+  - Setup TypeScript (REQUIRED for type safety and maintainability)
+  - Install dev dependencies: `typescript`, `@types/node`, `@types/express`, `ts-node`
+  - Configure tsconfig.json with strict mode enabled
 
 - [ ] Initialize Vue.js projects
   - Create `dm-console` with Vue CLI or Vite
@@ -72,7 +73,46 @@ This plan breaks down development into four phases:
 
 ---
 
-### 0.2 Development Environment
+### 0.2 Code Quality & Linting Standards
+
+**Tasks:**
+- [ ] Setup ESLint for server (TypeScript)
+  - Install: `eslint`, `@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin`
+  - Create `.eslintrc.json` with strict TypeScript rules
+  - Enable: no-any, strict-null-checks, no-implicit-any
+
+- [ ] Setup Prettier for consistent formatting
+  - Install: `prettier`, `eslint-config-prettier`
+  - Create `.prettierrc` with project standards (2-space indent, single quotes, etc.)
+  - Integrate with ESLint to avoid conflicts
+
+- [ ] Setup pre-commit hooks
+  - Install: `husky`, `lint-staged`
+  - Configure to run linting and formatting on staged files
+  - Prevent commits with linting errors
+
+- [ ] Configure ESLint for Vue projects
+  - Install: `eslint-plugin-vue`, `@vue/eslint-config-typescript`
+  - Setup Vue3 + TypeScript rules
+
+- [ ] Add npm scripts for linting
+  - `npm run lint` - Check all files
+  - `npm run lint:fix` - Auto-fix issues
+  - `npm run format` - Run Prettier
+
+- [ ] Configure VS Code settings
+  - Enable format on save
+  - Enable ESLint auto-fix on save
+  - Add recommended extensions list
+
+**Deliverables:**
+- Consistent code style enforced automatically
+- Pre-commit hooks prevent bad code from being committed
+- All team members use same formatting rules
+
+---
+
+### 0.3 Development Environment
 
 **Tasks:**
 - [ ] Setup local Redis instance (Docker or native)
@@ -1079,10 +1119,13 @@ This plan breaks down development into four phases:
 - Add comments for complex logic
 
 **TypeScript/JavaScript:**
-- Use TypeScript for server code (type safety)
-- ESLint + Prettier for consistent formatting
+- Use TypeScript for ALL server and web code (REQUIRED, not optional)
+- Enable strict mode in tsconfig.json
+- No implicit any types allowed
+- ESLint + Prettier enforced via pre-commit hooks
 - Async/await over callbacks
 - Proper error handling (try/catch)
+- All dependencies must have type definitions (@types packages)
 
 **Vue.js:**
 - Composition API preferred
