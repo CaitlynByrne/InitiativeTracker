@@ -9,13 +9,18 @@ import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
 import { GameState, Creature, StateUpdateResult, CreatureType } from '../types';
 import { ValidationUtils } from '../utils/validation';
+import { RedisClient } from '../persistence/RedisClient';
+import { logger } from '../utils/logger';
 
 export class StateManager extends EventEmitter {
   private static instance: StateManager;
   private state: GameState;
+  private redis: RedisClient;
+  private readonly STATE_KEY = 'initiative-tracker:state';
 
   private constructor() {
     super();
+    this.redis = RedisClient.getInstance();
     this.state = this.createDefaultState();
   }
 
@@ -49,11 +54,59 @@ export class StateManager extends EventEmitter {
   }
 
   /**
+   * Load state from Redis
+   */
+  public async loadFromRedis(): Promise<boolean> {
+    if (!this.redis.isConnected()) {
+      logger.warn('Redis not connected, skipping state load');
+      return false;
+    }
+
+    try {
+      const savedState = await this.redis.load<GameState>(this.STATE_KEY);
+
+      if (savedState) {
+        this.state = savedState;
+        logger.info('State loaded from Redis successfully');
+        this.emit('stateChanged', this.getState());
+        return true;
+      }
+
+      logger.info('No saved state found in Redis');
+      return false;
+    } catch (error) {
+      logger.error('Failed to load state from Redis', error);
+      return false;
+    }
+  }
+
+  /**
+   * Save state to Redis
+   */
+  private async saveToRedis(): Promise<void> {
+    if (!this.redis.isConnected()) {
+      logger.debug('Redis not connected, skipping state save');
+      return;
+    }
+
+    try {
+      await this.redis.save(this.STATE_KEY, this.state);
+      logger.debug('State saved to Redis');
+    } catch (error) {
+      logger.error('Failed to save state to Redis', error);
+    }
+  }
+
+  /**
    * Update state and emit change event
    */
   private updateState(updater: (state: GameState) => void): void {
     updater(this.state);
     this.emit('stateChanged', this.getState());
+    // Save to Redis after state change
+    this.saveToRedis().catch((err) => {
+      logger.error('Failed to save state to Redis after update', err);
+    });
   }
 
   /**

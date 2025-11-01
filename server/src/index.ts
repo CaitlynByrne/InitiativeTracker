@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import { StateManager } from './state/StateManager';
 import { EventHandlers } from './events/handlers';
 import { TimerManager } from './timer/TimerManager';
+import { RedisClient } from './persistence/RedisClient';
 import { logger } from './utils/logger';
 
 const app = express();
@@ -15,9 +16,10 @@ const io = new Server(httpServer, {
   },
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
-// Initialize state manager, timer manager, and event handlers
+// Initialize Redis, state manager, timer manager, and event handlers
+const redis = RedisClient.getInstance();
 const stateManager = StateManager.getInstance();
 const timerManager = TimerManager.getInstance();
 const eventHandlers = new EventHandlers(io);
@@ -48,26 +50,57 @@ io.on('connection', (socket) => {
   });
 });
 
-// Start server
-httpServer.listen(PORT, () => {
-  logger.info(`Initiative Tracker Server running on port ${PORT}`);
-  logger.info(`WebSocket server ready`);
-  logger.info(`Health check available at http://localhost:${PORT}/health`);
-});
+// Initialize server with Redis connection and state loading
+async function startServer() {
+  try {
+    // Connect to Redis
+    await redis.connect();
+    logger.info('Redis connected successfully');
+
+    // Load saved state from Redis
+    const loaded = await stateManager.loadFromRedis();
+    if (loaded) {
+      logger.info('Previous state restored from Redis');
+    } else {
+      logger.info('Starting with fresh state');
+    }
+
+    // Start HTTP server
+    httpServer.listen(PORT, () => {
+      logger.info(`Initiative Tracker Server running on port ${PORT}`);
+      logger.info(`WebSocket server ready`);
+      logger.info(`Health check available at http://localhost:${PORT}/health`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server', error);
+    // Continue without Redis if it fails
+    logger.warn('Starting server without Redis persistence');
+    httpServer.listen(PORT, () => {
+      logger.info(`Initiative Tracker Server running on port ${PORT} (WITHOUT REDIS)`);
+      logger.info(`WebSocket server ready`);
+      logger.info(`Health check available at http://localhost:${PORT}/health`);
+    });
+  }
+}
+
+// Start the server
+startServer();
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, closing server...');
   timerManager.destroy();
+  await redis.disconnect();
   httpServer.close(() => {
     logger.info('Server closed');
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT received, closing server...');
   timerManager.destroy();
+  await redis.disconnect();
   httpServer.close(() => {
     logger.info('Server closed');
     process.exit(0);

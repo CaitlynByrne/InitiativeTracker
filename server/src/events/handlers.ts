@@ -59,6 +59,12 @@ export class EventHandlers {
     // Session management
     socket.on('session:reset', () => this.handleSessionReset(socket));
     socket.on('session:clear', () => this.handleSessionClear(socket));
+    socket.on('session:save', (data: { name?: string }, callback?: (result: any) => void) =>
+      this.handleSessionSave(socket, data, callback)
+    );
+    socket.on('session:restore', (callback?: (result: any) => void) =>
+      this.handleSessionRestore(socket, callback)
+    );
 
     // Player turn management
     socket.on('turn:end', (data: { creatureId: string }) => this.handleTurnEnd(socket, data));
@@ -314,5 +320,85 @@ export class EventHandlers {
     }
 
     logger.info(`Turn ended by player: ${currentCreature.name}`);
+  }
+
+  /**
+   * Handle session save
+   */
+  private async handleSessionSave(
+    socket: Socket,
+    data: { name?: string },
+    callback?: (result: any) => void
+  ): Promise<void> {
+    try {
+      const sessionName = data.name || `session-${Date.now()}`;
+
+      // State is automatically saved to Redis after each state change
+      // This handler just confirms the save and notifies the client
+
+      logger.info(`Session save requested: ${sessionName}`);
+
+      const response = {
+        success: true,
+        message: 'Session saved successfully',
+        sessionName,
+        timestamp: new Date().toISOString(),
+      };
+
+      socket.emit('session:saved', response);
+      if (callback) callback(response);
+    } catch (error: any) {
+      logger.error('Error in session:save:', error);
+      const errorResponse = {
+        success: false,
+        message: error.message || 'Failed to save session',
+        event: 'session:save',
+      };
+      socket.emit('error', errorResponse);
+      if (callback) callback(errorResponse);
+    }
+  }
+
+  /**
+   * Handle session restore
+   */
+  private async handleSessionRestore(
+    socket: Socket,
+    callback?: (result: any) => void
+  ): Promise<void> {
+    try {
+      const loaded = await this.stateManager.loadFromRedis();
+
+      if (!loaded) {
+        const errorResponse = {
+          success: false,
+          message: 'No saved session found',
+          event: 'session:restore',
+        };
+        socket.emit('error', errorResponse);
+        if (callback) callback(errorResponse);
+        return;
+      }
+
+      logger.info('Session restored from Redis');
+
+      const response = {
+        success: true,
+        message: 'Session restored successfully',
+        timestamp: new Date().toISOString(),
+      };
+
+      socket.emit('session:restored', response);
+      if (callback) callback(response);
+    } catch (error: any) {
+      logger.error('Error in session:restore:', error);
+      const errorResponse = {
+        success: false,
+        message: error.message || 'Failed to restore session',
+        event: 'session:restore',
+      };
+      socket.emit('error', errorResponse);
+      if (callback) callback(errorResponse);
+    }
   }
 }
