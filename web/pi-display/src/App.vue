@@ -36,12 +36,12 @@
           </div>
 
           <!-- Scrollable Turn List -->
-          <div class="flex-1 overflow-y-auto">
+          <div class="flex-1 overflow-y-auto p-2">
             <div
               v-for="(creature, index) in orderedCreatures"
               :key="creature.id"
               :class="[
-                'px-6 py-4 border-b-2 border-gray-800 transition-all',
+                'px-6 py-4 mb-2 transition-all',
                 gameState.currentTurnIndex >= 0 && index === 0 ? 'bg-opacity-100 border-l-8 border-l-white' : 'bg-opacity-60',
                 getCreatureListClass(creature.type, gameState.currentTurnIndex >= 0 && index === 0)
               ]"
@@ -57,22 +57,45 @@
                 <div v-else class="w-8"></div>
 
                 <!-- Initiative Badge -->
-                <div class="text-3xl font-bold bg-black/30 px-3 py-1 rounded-lg min-w-[4rem] text-center">
+                <div
+                  :class="[
+                    'font-bold bg-black/30 px-3 py-1 rounded-lg min-w-[4rem] text-center',
+                    gameState.currentTurnIndex >= 0 && index === 0 ? 'text-4xl' : 'text-3xl'
+                  ]"
+                >
                   {{ creature.initiative }}
                 </div>
 
                 <!-- Creature Info -->
                 <div class="flex-1">
-                  <div class="text-2xl font-bold">
+                  <div
+                    :class="[
+                      'font-bold',
+                      gameState.currentTurnIndex >= 0 && index === 0 ? 'text-3xl' : 'text-2xl'
+                    ]"
+                  >
                     {{ creature.name }}
                     <span v-if="gameState.currentTurnIndex >= 0 && index === 0" class="text-xl text-yellow-400 ml-2">(CURRENT)</span>
                     <span v-else-if="gameState.currentTurnIndex >= 0 && index === 1" class="text-lg text-gray-400 ml-2">(NEXT)</span>
                   </div>
-                  <div class="text-lg opacity-70 capitalize">{{ creature.type }}</div>
+                  <div
+                    :class="[
+                      'opacity-70 capitalize',
+                      gameState.currentTurnIndex >= 0 && index === 0 ? 'text-xl' : 'text-lg'
+                    ]"
+                  >
+                    {{ creature.type }}
+                  </div>
                 </div>
 
                 <!-- HP Display -->
-                <div v-if="creature.hp !== undefined" class="text-xl opacity-70">
+                <div
+                  v-if="creature.hp !== undefined"
+                  :class="[
+                    'opacity-70',
+                    gameState.currentTurnIndex >= 0 && index === 0 ? 'text-2xl' : 'text-xl'
+                  ]"
+                >
                   HP: {{ creature.hp }}/{{ creature.maxHp || '?' }}
                 </div>
               </div>
@@ -191,15 +214,15 @@
 
         <!-- Upcoming Turns -->
         <div class="flex-1 bg-gray-950">
-          <div class="px-6 py-4 text-2xl text-gray-400 border-b-2 border-gray-800">
+          <div class="px-6 py-4 text-2xl text-gray-400 border-b-4 border-gray-800 bg-gray-900">
             {{ gameState.currentTurnIndex >= 0 ? 'Upcoming Turns' : 'Initiative Order' }}
           </div>
-          <div class="space-y-0">
+          <div class="p-2">
             <div
               v-for="(creature, index) in upcomingCreatures"
               :key="creature.id"
               :class="[
-                'px-6 py-4 border-b-2 border-gray-800',
+                'px-6 py-4 mb-2',
                 getCreatureBackgroundClass(creature.type, true)
               ]"
             >

@@ -8,17 +8,26 @@
 
     <div v-else class="space-y-2">
       <div
-        v-for="(creature, index) in creatures"
+        v-for="(creature, displayIndex) in orderedCreatures"
         :key="creature.id"
         :class="[
           'creature-card p-3 rounded border-2 transition-all',
-          currentRound > 0 && index === currentTurnIndex
+          currentRound > 0 && displayIndex === 0
             ? getActiveCreatureClass(creature.type)
             : getCreatureClass(creature.type)
         ]"
       >
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
+            <!-- Current/Next Indicator -->
+            <div v-if="currentRound > 0 && displayIndex === 0" class="text-yellow-400 font-bold animate-pulse">
+              ▶
+            </div>
+            <div v-else-if="currentRound > 0 && displayIndex === 1" class="text-gray-400">
+              ⏭
+            </div>
+            <div v-else class="w-4"></div>
+
             <!-- Initiative Badge -->
             <div class="initiative-badge bg-gray-800 text-white font-bold px-3 py-1 rounded border border-gray-600">
               {{ creature.initiative }}
@@ -28,8 +37,11 @@
             <div>
               <div class="creature-name font-bold text-white">
                 {{ creature.name }}
-                <span v-if="currentRound > 0 && index === currentTurnIndex" class="ml-2 text-yellow-400 animate-pulse">
-                  ← ACTIVE
+                <span v-if="currentRound > 0 && displayIndex === 0" class="ml-2 text-yellow-400 text-sm">
+                  (CURRENT)
+                </span>
+                <span v-else-if="currentRound > 0 && displayIndex === 1" class="ml-2 text-gray-400 text-sm">
+                  (NEXT)
                 </span>
               </div>
               <div :class="['creature-type text-sm capitalize', getTypeTextColor(creature.type)]">
@@ -70,9 +82,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { Creature } from '../types';
 
-defineProps<{
+const props = defineProps<{
   creatures: Creature[];
   currentTurnIndex: number;
   currentRound: number;
@@ -81,6 +94,23 @@ defineProps<{
 defineEmits<{
   (e: 'remove', id: string): void;
 }>();
+
+// Reorder creatures so current is first (like the Pi display)
+const orderedCreatures = computed(() => {
+  const creatures = [...props.creatures];
+  const currentIndex = props.currentTurnIndex;
+
+  // If combat hasn't started yet, return creatures in their current order
+  if (currentIndex < 0 || props.currentRound === 0) {
+    return creatures;
+  }
+
+  // Reorder array so current is first, followed by upcoming turns
+  return [
+    ...creatures.slice(currentIndex),
+    ...creatures.slice(0, currentIndex)
+  ];
+});
 
 // Get creature class based on type (inactive state)
 const getCreatureClass = (type: string): string => {
