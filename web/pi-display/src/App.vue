@@ -29,57 +29,64 @@
     <div v-else class="flex-1 overflow-hidden">
       <!-- LANDSCAPE LAYOUT -->
       <div v-if="isLandscape" class="h-full flex">
-        <!-- Left Side: Rolodex Turn Order -->
-        <div class="rolodex-container w-1/2 h-full bg-gray-950 border-r-4 border-gray-800 overflow-hidden relative">
-          <div class="absolute inset-0 flex flex-col justify-center items-center p-4">
-            <!-- Rolodex Cards -->
-            <div class="rolodex-viewport relative w-full" style="height: 90%;">
-              <transition-group name="rolodex" tag="div" class="relative h-full">
-                <div
-                  v-for="(creature, displayIndex) in rolodexCreatures"
-                  :key="`${creature.id}-${displayIndex}`"
-                  :class="[
-                    'rolodex-card absolute w-full px-6 py-4 rounded-2xl border-4 transition-all duration-500',
-                    getCreatureCardClass(creature.type, displayIndex)
-                  ]"
-                  :style="getRolodexCardStyle(displayIndex)"
-                >
-                  <!-- Current Turn Indicator -->
-                  <div v-if="displayIndex === 0" class="absolute top-2 right-4 text-3xl animate-pulse">
-                    ▶ NOW
-                  </div>
-                  <div v-if="displayIndex === 1" class="absolute top-2 right-4 text-2xl text-gray-400">
-                    NEXT
-                  </div>
+        <!-- Left Side: Turn Order List -->
+        <div class="w-1/2 h-full bg-gray-950 border-r-4 border-gray-800 flex flex-col">
+          <div class="px-6 py-4 text-3xl font-bold text-gray-300 border-b-4 border-gray-800 bg-gray-900">
+            Turn Order
+          </div>
 
-                  <div class="flex items-center gap-4">
-                    <!-- Initiative Badge -->
-                    <div class="text-5xl font-bold bg-black/30 px-4 py-2 rounded-xl">
-                      {{ creature.initiative }}
-                    </div>
-
-                    <!-- Creature Info -->
-                    <div class="flex-1">
-                      <div class="text-4xl font-bold mb-1">{{ creature.name }}</div>
-                      <div class="text-2xl opacity-80 capitalize">{{ creature.type }}</div>
-                      <div v-if="creature.hp !== undefined" class="text-2xl mt-1 opacity-70">
-                        HP: {{ creature.hp }}/{{ creature.maxHp || '?' }}
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Conditions -->
-                  <div v-if="creature.conditions && creature.conditions.length > 0" class="mt-3 flex gap-2 flex-wrap">
-                    <span
-                      v-for="condition in creature.conditions"
-                      :key="condition"
-                      class="text-xl bg-yellow-800 text-yellow-200 px-3 py-1 rounded-lg"
-                    >
-                      {{ condition }}
-                    </span>
-                  </div>
+          <!-- Scrollable Turn List -->
+          <div class="flex-1 overflow-y-auto">
+            <div
+              v-for="(creature, index) in orderedCreatures"
+              :key="creature.id"
+              :class="[
+                'px-6 py-4 border-b-2 border-gray-800 transition-all',
+                gameState.currentTurnIndex >= 0 && index === 0 ? 'bg-opacity-100 border-l-8 border-l-white' : 'bg-opacity-60',
+                getCreatureListClass(creature.type, gameState.currentTurnIndex >= 0 && index === 0)
+              ]"
+            >
+              <div class="flex items-center gap-4">
+                <!-- Current/Next Indicator -->
+                <div v-if="gameState.currentTurnIndex >= 0 && index === 0" class="text-2xl font-bold text-yellow-400 animate-pulse">
+                  ▶
                 </div>
-              </transition-group>
+                <div v-else-if="gameState.currentTurnIndex >= 0 && index === 1" class="text-xl text-gray-400">
+                  ⏭
+                </div>
+                <div v-else class="w-8"></div>
+
+                <!-- Initiative Badge -->
+                <div class="text-3xl font-bold bg-black/30 px-3 py-1 rounded-lg min-w-[4rem] text-center">
+                  {{ creature.initiative }}
+                </div>
+
+                <!-- Creature Info -->
+                <div class="flex-1">
+                  <div class="text-2xl font-bold">
+                    {{ creature.name }}
+                    <span v-if="gameState.currentTurnIndex >= 0 && index === 0" class="text-xl text-yellow-400 ml-2">(CURRENT)</span>
+                    <span v-else-if="gameState.currentTurnIndex >= 0 && index === 1" class="text-lg text-gray-400 ml-2">(NEXT)</span>
+                  </div>
+                  <div class="text-lg opacity-70 capitalize">{{ creature.type }}</div>
+                </div>
+
+                <!-- HP Display -->
+                <div v-if="creature.hp !== undefined" class="text-xl opacity-70">
+                  HP: {{ creature.hp }}/{{ creature.maxHp || '?' }}
+                </div>
+              </div>
+
+              <!-- Conditions -->
+              <div v-if="creature.conditions && creature.conditions.length > 0" class="mt-2 flex gap-2 flex-wrap">
+                <span
+                  v-for="condition in creature.conditions"
+                  :key="condition"
+                  class="text-sm bg-yellow-800 text-yellow-200 px-2 py-1 rounded"
+                >
+                  {{ condition }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -116,7 +123,7 @@
           </div>
 
           <!-- Turn Progress Indicator -->
-          <div v-if="gameState.creatures.length > 1" class="mt-12 text-center">
+          <div v-if="gameState.currentTurnIndex >= 0 && gameState.creatures.length > 1" class="mt-12 text-center">
             <div class="text-3xl text-gray-500">
               Turn {{ gameState.currentTurnIndex + 1 }} of {{ gameState.creatures.length }}
             </div>
@@ -185,7 +192,7 @@
         <!-- Upcoming Turns -->
         <div class="flex-1 bg-gray-950">
           <div class="px-6 py-4 text-2xl text-gray-400 border-b-2 border-gray-800">
-            Upcoming Turns
+            {{ gameState.currentTurnIndex >= 0 ? 'Upcoming Turns' : 'Initiative Order' }}
           </div>
           <div class="space-y-0">
             <div
@@ -203,7 +210,7 @@
                 <div class="flex-1">
                   <div class="text-3xl font-bold">
                     {{ creature.name }}
-                    <span v-if="index === 0" class="text-2xl text-gray-400 ml-3">(NEXT)</span>
+                    <span v-if="gameState.currentTurnIndex >= 0 && index === 0" class="text-2xl text-gray-400 ml-3">(NEXT)</span>
                   </div>
                   <div class="text-xl opacity-70 capitalize">{{ creature.type }}</div>
                 </div>
@@ -245,7 +252,28 @@ onUnmounted(() => {
 
 // Current creature
 const currentCreature = computed(() => {
+  // Return undefined if combat hasn't started yet
+  if (gameState.value.currentTurnIndex < 0) {
+    return undefined;
+  }
   return gameState.value.creatures[gameState.value.currentTurnIndex];
+});
+
+// Ordered creatures for landscape view (all creatures in turn order)
+const orderedCreatures = computed(() => {
+  const creatures = [...gameState.value.creatures];
+  const currentIndex = gameState.value.currentTurnIndex;
+
+  // If combat hasn't started yet, return creatures in their current order
+  if (currentIndex < 0) {
+    return creatures;
+  }
+
+  // Reorder array so current is first
+  return [
+    ...creatures.slice(currentIndex),
+    ...creatures.slice(0, currentIndex)
+  ];
 });
 
 // Rolodex creatures for landscape view
@@ -267,6 +295,11 @@ const rolodexCreatures = computed(() => {
 const upcomingCreatures = computed(() => {
   const creatures = [...gameState.value.creatures];
   const currentIndex = gameState.value.currentTurnIndex;
+
+  // If combat hasn't started yet, return all creatures
+  if (currentIndex < 0) {
+    return creatures;
+  }
 
   // Get all creatures after current
   const afterCurrent = creatures.slice(currentIndex + 1);
@@ -304,18 +337,55 @@ const getCreatureCardClass = (type: string, displayIndex: number): string => {
 
 // Get background class for portrait mode
 const getCreatureBackgroundClass = (type: string, isUpcoming: boolean = false): string => {
-  const opacity = isUpcoming ? '60' : '80';
-  const borderOpacity = isUpcoming ? '600' : '500';
+  if (isUpcoming) {
+    switch (type) {
+      case 'player':
+        return 'bg-blue-900/60 border-blue-600';
+      case 'npc':
+        return 'bg-green-900/60 border-green-600';
+      case 'monster':
+        return 'bg-red-900/60 border-red-600';
+      default:
+        return 'bg-gray-900/60 border-gray-600';
+    }
+  } else {
+    switch (type) {
+      case 'player':
+        return 'bg-blue-900/80 border-blue-500';
+      case 'npc':
+        return 'bg-green-900/80 border-green-500';
+      case 'monster':
+        return 'bg-red-900/80 border-red-500';
+      default:
+        return 'bg-gray-900/80 border-gray-500';
+    }
+  }
+};
 
-  switch (type) {
-    case 'player':
-      return `bg-blue-900/${opacity} border-blue-${borderOpacity}`;
-    case 'npc':
-      return `bg-green-900/${opacity} border-green-${borderOpacity}`;
-    case 'monster':
-      return `bg-red-900/${opacity} border-red-${borderOpacity}`;
-    default:
-      return `bg-gray-900/${opacity} border-gray-${borderOpacity}`;
+// Get creature list class for landscape mode
+const getCreatureListClass = (type: string, isCurrent: boolean = false): string => {
+  if (isCurrent) {
+    switch (type) {
+      case 'player':
+        return 'bg-blue-800/90 text-blue-100';
+      case 'npc':
+        return 'bg-green-800/90 text-green-100';
+      case 'monster':
+        return 'bg-red-800/90 text-red-100';
+      default:
+        return 'bg-gray-800/90 text-gray-100';
+    }
+  } else {
+    switch (type) {
+      case 'player':
+        return 'bg-blue-800/50 text-blue-100';
+      case 'npc':
+        return 'bg-green-800/50 text-green-100';
+      case 'monster':
+        return 'bg-red-800/50 text-red-100';
+      default:
+        return 'bg-gray-800/50 text-gray-100';
+    }
   }
 };
 

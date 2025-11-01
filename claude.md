@@ -81,6 +81,15 @@ WebSocket-based event-driven architecture using Socket.IO:
 7. Integration testing
 8. Deployment to Raspberry Pi
 
+## Testing Guidelines
+
+**IMPORTANT**: Never test by running Node.js applications directly on the command line. Always perform testing within Docker containers to ensure consistency and proper environment configuration. This includes:
+- The WebSocket server
+- The DM console web interface
+- The Pi display web interface
+
+All development servers should be run through Docker Compose, not via `npm run dev` or similar commands outside of containers.
+
 ## Getting Started
 
 See [docs/deployment/setup-guide.md](docs/deployment/setup-guide.md) for initial setup instructions.
