@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Redis for state persistence
+  redis:
+    image: redis:7-alpine
+    container_name: initiative-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # WebSocket Server (Development with hot reload)
+  server:
+    build:
+      context: ../server
+      dockerfile: Dockerfile.dev
+    container_name: initiative-server-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - PORT=3000
+    volumes:
+      - ../server/src:/app/src
+      - ../server/tsconfig.json:/app/tsconfig.json
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local

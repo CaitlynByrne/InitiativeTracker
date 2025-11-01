@@ -30,7 +30,41 @@ Initiative Tracker coordinates combat turn order across multiple devices in real
 
 ## Quick Start
 
-See [docs/deployment/setup-guide.md](docs/deployment/setup-guide.md) for complete setup instructions.
+### Development Setup
+
+1. **Start Redis** (required for state persistence):
+
+   ```bash
+   cd infrastructure
+   docker-compose -f docker-compose.dev.yml up -d
+   ```
+
+2. **Start WebSocket Server**:
+
+   ```bash
+   cd server
+   npm install
+   npm run dev
+   ```
+
+   Server runs on `http://localhost:3000`
+
+3. **Start DM Console**:
+
+   ```bash
+   cd web/dm-console
+   npm install
+   npm run dev
+   ```
+
+   DM Console runs on `http://localhost:5173`
+
+### Verify Setup
+
+- Open `http://localhost:3000/health` - should show server status
+- Open `http://localhost:5173` - should show DM Console with connection indicator
+
+See [docs/deployment/setup-guide.md](docs/deployment/setup-guide.md) for complete deployment instructions.
 
 ## Documentation
 
