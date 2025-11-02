@@ -12,6 +12,7 @@ export function useGameState() {
   });
   const connected = ref(false);
   const error = ref<string | null>(null);
+  const savedSessions = ref<any[]>([]);
 
   const connect = () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -67,6 +68,44 @@ export function useGameState() {
     socket.value?.emit('initiative:reorder', { fromIndex, toIndex });
   };
 
+  const saveSession = (name: string) => {
+    socket.value?.emit('session:save', { name }, (response: any) => {
+      if (response.success) {
+        console.log('Session saved:', name);
+      } else {
+        error.value = response.error || 'Failed to save session';
+        setTimeout(() => error.value = null, 5000);
+      }
+    });
+  };
+
+  const restoreSession = (name: string) => {
+    socket.value?.emit('session:restore', { name }, (response: any) => {
+      if (response.success) {
+        console.log('Session restored:', name);
+      } else {
+        error.value = response.error || 'Failed to restore session';
+        setTimeout(() => error.value = null, 5000);
+      }
+    });
+  };
+
+  const listSessions = () => {
+    socket.value?.emit('session:list', (response: any) => {
+      if (response.success) {
+        savedSessions.value = response.sessions;
+      }
+    });
+  };
+
+  const deleteSession = (name: string) => {
+    socket.value?.emit('session:delete', { name }, (response: any) => {
+      if (response.success) {
+        listSessions(); // Refresh list
+      }
+    });
+  };
+
   onMounted(() => {
     connect();
   });
@@ -85,6 +124,11 @@ export function useGameState() {
     startTimer,
     stopTimer,
     resetSession,
-    reorderInitiative
+    reorderInitiative,
+    saveSession,
+    restoreSession,
+    listSessions,
+    deleteSession,
+    savedSessions
   };
 }

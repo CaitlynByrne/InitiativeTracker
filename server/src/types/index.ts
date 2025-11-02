@@ -12,6 +12,7 @@ export interface Creature {
   hp?: number;
   maxHp?: number;
   conditions?: string[];
+  imageUrl?: string;  // URL or data URI for creature avatar
   device_id?: string;
 }
 

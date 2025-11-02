@@ -6,6 +6,7 @@ export interface Creature {
   hp?: number;
   maxHp?: number;
   conditions?: string[];
+  imageUrl?: string;  // URL or data URI for creature avatar
 }
 
 export interface Timer {

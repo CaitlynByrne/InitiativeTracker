@@ -6,6 +6,7 @@ import { Socket, Server } from 'socket.io';
 import { StateManager } from '../state/StateManager';
 import { Creature } from '../types';
 import { logger } from '../utils/logger';
+import { RedisClient } from '../persistence/RedisClient';
 
 export class EventHandlers {
   private stateManager: StateManager;
@@ -62,8 +63,14 @@ export class EventHandlers {
     socket.on('session:save', (data: { name?: string }, callback?: (result: any) => void) =>
       this.handleSessionSave(socket, data, callback)
     );
-    socket.on('session:restore', (callback?: (result: any) => void) =>
-      this.handleSessionRestore(socket, callback)
+    socket.on('session:restore', (data: { name: string }, callback?: (result: any) => void) =>
+      this.handleSessionRestore(socket, data, callback)
+    );
+    socket.on('session:list', (callback?: (result: any) => void) =>
+      this.handleSessionList(socket, callback)
+    );
+    socket.on('session:delete', (data: { name: string }, callback?: (result: any) => void) =>
+      this.handleSessionDelete(socket, data, callback)
     );
 
     // Player turn management
@@ -332,11 +339,25 @@ export class EventHandlers {
   ): Promise<void> {
     try {
       const sessionName = data.name || `session-${Date.now()}`;
+      const redisClient = RedisClient.getInstance();
 
-      // State is automatically saved to Redis after each state change
-      // This handler just confirms the save and notifies the client
+      // Get current state
+      const currentState = this.stateManager.getState();
 
-      logger.info(`Session save requested: ${sessionName}`);
+      // Add metadata
+      const sessionData = {
+        ...currentState,
+        metadata: {
+          savedAt: new Date().toISOString(),
+          name: sessionName
+        }
+      };
+
+      // Save to Redis with named key
+      const key = `initiative:saved:${sessionName}`;
+      await redisClient.save(key, sessionData);
+
+      logger.info(`Session saved: ${sessionName}`);
 
       const response = {
         success: true,
@@ -364,15 +385,20 @@ export class EventHandlers {
    */
   private async handleSessionRestore(
     socket: Socket,
+    data: { name: string },
     callback?: (result: any) => void
   ): Promise<void> {
     try {
-      const loaded = await this.stateManager.loadFromRedis();
+      const redisClient = RedisClient.getInstance();
+      const key = `initiative:saved:${data.name}`;
 
-      if (!loaded) {
+      // Load from Redis
+      const sessionData = await redisClient.load(key);
+
+      if (!sessionData) {
         const errorResponse = {
           success: false,
-          message: 'No saved session found',
+          message: `No saved session found: ${data.name}`,
           event: 'session:restore',
         };
         socket.emit('error', errorResponse);
@@ -380,7 +406,11 @@ export class EventHandlers {
         return;
       }
 
-      logger.info('Session restored from Redis');
+      // Restore state (excluding metadata)
+      const { metadata, ...stateToRestore } = sessionData as any;
+      this.stateManager.loadState(stateToRestore);
+
+      logger.info(`Session restored: ${data.name}`);
 
       const response = {
         success: true,
@@ -399,6 +429,74 @@ export class EventHandlers {
       };
       socket.emit('error', errorResponse);
       if (callback) callback(errorResponse);
+    }
+  }
+
+  /**
+   * Handle session list
+   */
+  private async handleSessionList(
+    _socket: Socket,
+    callback?: (result: any) => void
+  ): Promise<void> {
+    try {
+      const redisClient = RedisClient.getInstance();
+      const pattern = 'initiative:saved:*';
+      const keys = await redisClient.getKeys(pattern);
+
+      const sessions = await Promise.all(
+        keys.map(async (key) => {
+          const data = await redisClient.load(key);
+          if (!data) return null;
+
+          const state = data as any;
+          const name = key.replace('initiative:saved:', '');
+
+          return {
+            name,
+            timestamp: state.metadata?.savedAt || new Date().toISOString(),
+            creatureCount: state.creatures?.length || 0,
+            round: state.currentRound || 1
+          };
+        })
+      );
+
+      const filteredSessions = sessions.filter(s => s !== null);
+
+      if (callback) {
+        callback({ success: true, sessions: filteredSessions });
+      }
+    } catch (error: any) {
+      logger.error('Error listing sessions:', error);
+      if (callback) {
+        callback({ success: false, error: error.message });
+      }
+    }
+  }
+
+  /**
+   * Handle session delete
+   */
+  private async handleSessionDelete(
+    _socket: Socket,
+    data: { name: string },
+    callback?: (result: any) => void
+  ): Promise<void> {
+    try {
+      const redisClient = RedisClient.getInstance();
+      const key = `initiative:saved:${data.name}`;
+      await redisClient.delete(key);
+
+      logger.info(`Session deleted: ${data.name}`);
+
+      if (callback) {
+        callback({ success: true });
+      }
+    } catch (error: any) {
+      logger.error('Error deleting session:', error);
+      if (callback) {
+        callback({ success: false, error: error.message });
+      }
     }
   }
 }

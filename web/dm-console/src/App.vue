@@ -55,14 +55,27 @@
         />
       </div>
     </div>
+
+    <!-- Session Management (Full Width) -->
+    <div class="mt-4">
+      <SessionManager
+        ref="sessionManagerRef"
+        @save="saveSession"
+        @restore="restoreSession"
+        @delete="deleteSession"
+        @list="handleSessionList"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useGameState } from './composables/useGameState';
 import InitiativeList from './components/InitiativeList.vue';
 import AddCreatureForm from './components/AddCreatureForm.vue';
 import ControlPanel from './components/ControlPanel.vue';
+import SessionManager from './components/SessionManager.vue';
 
 const {
   gameState,
@@ -73,6 +86,20 @@ const {
   nextTurn,
   startTimer,
   stopTimer,
-  resetSession
+  resetSession,
+  saveSession,
+  restoreSession,
+  listSessions,
+  deleteSession,
+  savedSessions
 } = useGameState();
+
+const sessionManagerRef = ref<InstanceType<typeof SessionManager> | null>(null);
+
+const handleSessionList = () => {
+  listSessions();
+  setTimeout(() => {
+    sessionManagerRef.value?.updateSessions(savedSessions.value);
+  }, 100);
+};
 </script>
