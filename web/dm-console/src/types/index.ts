@@ -1,4 +1,4 @@
-import { ConditionEffect } from './conditions';
+import type { ConditionEffect } from './conditions';
 
 export interface Creature {
   id: string;

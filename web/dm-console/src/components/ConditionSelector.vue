@@ -55,13 +55,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { ConditionEffect } from '../types/conditions';
-
-const DND5E_CONDITIONS = [
-  'Blinded', 'Charmed', 'Deafened', 'Exhaustion', 'Frightened',
-  'Grappled', 'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified',
-  'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious',
-  'Concentrating', 'Blessed', 'Cursed', 'Hasted', 'Slowed'
-];
+import { DND5E_CONDITIONS } from '../types/conditions';
 
 const props = defineProps<{
   modelValue?: ConditionEffect[];

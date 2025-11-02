@@ -1,3 +1,5 @@
+import { ConditionEffect } from './conditions';
+
 export interface Creature {
   id: string;
   name: string;
@@ -5,7 +7,9 @@ export interface Creature {
   type: 'player' | 'npc' | 'monster';
   hp?: number;
   maxHp?: number;
-  conditions?: string[];
+  conditions?: string[]; // DEPRECATED: for backward compatibility
+  conditionEffects?: ConditionEffect[]; // NEW
+  imageUrl?: string;  // URL or data URI for creature avatar
 }
 
 export interface Timer {

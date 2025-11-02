@@ -352,20 +352,20 @@ const orderedCreatures = computed(() => {
   ];
 });
 
-// Rolodex creatures for landscape view
-const rolodexCreatures = computed(() => {
-  const creatures = [...gameState.value.creatures];
-  const currentIndex = gameState.value.currentTurnIndex;
+// UNUSED: Rolodex creatures for landscape view (kept for future use)
+// const rolodexCreatures = computed(() => {
+//   const creatures = [...gameState.value.creatures];
+//   const currentIndex = gameState.value.currentTurnIndex;
 
-  // Reorder array so current is first
-  const reordered = [
-    ...creatures.slice(currentIndex),
-    ...creatures.slice(0, currentIndex)
-  ];
+//   // Reorder array so current is first
+//   const reordered = [
+//     ...creatures.slice(currentIndex),
+//     ...creatures.slice(0, currentIndex)
+//   ];
 
-  // Return only what we can display (limit to 5 for visual clarity)
-  return reordered.slice(0, Math.min(5, reordered.length));
-});
+//   // Return only what we can display (limit to 5 for visual clarity)
+//   return reordered.slice(0, Math.min(5, reordered.length));
+// });
 
 // Upcoming creatures for portrait view
 const upcomingCreatures = computed(() => {
@@ -391,25 +391,25 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Get creature card class based on type
-const getCreatureCardClass = (type: string, displayIndex: number): string => {
-  const baseClass = displayIndex === 0
-    ? 'border-white shadow-2xl z-30 scale-105'
-    : displayIndex === 1
-    ? 'border-gray-400 shadow-xl z-20'
-    : 'border-gray-600 shadow-lg z-10';
+// UNUSED: Get creature card class based on type (kept for future use)
+// const getCreatureCardClass = (type: string, displayIndex: number): string => {
+//   const baseClass = displayIndex === 0
+//     ? 'border-white shadow-2xl z-30 scale-105'
+//     : displayIndex === 1
+//     ? 'border-gray-400 shadow-xl z-20'
+//     : 'border-gray-600 shadow-lg z-10';
 
-  switch (type) {
-    case 'player':
-      return `${baseClass} bg-blue-800/90 text-blue-100`;
-    case 'npc':
-      return `${baseClass} bg-green-800/90 text-green-100`;
-    case 'monster':
-      return `${baseClass} bg-red-800/90 text-red-100`;
-    default:
-      return `${baseClass} bg-gray-800/90 text-gray-100`;
-  }
-};
+//   switch (type) {
+//     case 'player':
+//       return `${baseClass} bg-blue-800/90 text-blue-100`;
+//     case 'npc':
+//       return `${baseClass} bg-green-800/90 text-green-100`;
+//     case 'monster':
+//       return `${baseClass} bg-red-800/90 text-red-100`;
+//     default:
+//       return `${baseClass} bg-gray-800/90 text-gray-100`;
+//   }
+// };
 
 // Get background class for portrait mode
 const getCreatureBackgroundClass = (type: string, isUpcoming: boolean = false): string => {
@@ -465,20 +465,20 @@ const getCreatureListClass = (type: string, isCurrent: boolean = false): string 
   }
 };
 
-// Calculate rolodex card positioning
-const getRolodexCardStyle = (index: number): string => {
-  const baseTop = 25; // Start position percentage
-  const spacing = 120; // Pixels between cards
-  const rotation = index * 2; // Slight rotation for depth
-  const translateY = index * spacing;
+// UNUSED: Calculate rolodex card positioning (kept for future use)
+// const getRolodexCardStyle = (index: number): string => {
+//   const baseTop = 25; // Start position percentage
+//   const spacing = 120; // Pixels between cards
+//   const rotation = index * 2; // Slight rotation for depth
+//   const translateY = index * spacing;
 
-  return `
-    top: ${baseTop}%;
-    transform: translateY(${translateY - 100}px) translateX(-50%) rotateX(${rotation}deg);
-    left: 50%;
-    opacity: ${index > 3 ? 0.3 : 1};
-  `;
-};
+//   return `
+//     top: ${baseTop}%;
+//     transform: translateY(${translateY - 100}px) translateX(-50%) rotateX(${rotation}deg);
+//     left: 50%;
+//     opacity: ${index > 3 ? 0.3 : 1};
+//   `;
+// };
 </script>
 
 <style scoped>
