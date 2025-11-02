@@ -116,7 +116,40 @@ docker-compose -f infrastructure/docker-compose.test.yml down
 ```
 
 See [docs/testing/containerized-testing.md](docs/testing/containerized-testing.md) for complete testing documentation.
-See [docs/deployment/setup-guide.md](docs/deployment/setup-guide.md) for production deployment instructions.
+
+### Production Deployment (Raspberry Pi)
+
+#### One-Shot Installation
+
+For quick production deployment on a Raspberry Pi, use the automated installer:
+
+```bash
+# Download and run the installer
+curl -fsSL https://raw.githubusercontent.com/CaitlynByrne/InitiativeTracker/main/install-pi.sh | bash
+
+# Or if you prefer wget
+wget -qO- https://raw.githubusercontent.com/CaitlynByrne/InitiativeTracker/main/install-pi.sh | bash
+```
+
+The installer will:
+
+- Install Docker and required dependencies
+- Clone the repository
+- Auto-detect your Pi's IP address
+- Configure DNS settings
+- Build and start all services
+- Set up auto-start on boot
+- Install mDNS for easy discovery
+
+After installation, access the services at:
+
+- **DM Console**: `http://dm.initiative` (or `http://<pi-ip>`)
+- **Pi Display**: `http://player.initiative` (or `http://<pi-ip>`)
+
+**Display Pi Kiosk Mode:** The installer can also configure a Raspberry Pi to auto-boot into fullscreen browser mode for the shared display. When prompted during installation, answer "Yes" to configure as a display Pi.
+
+See [docs/deployment/quick-install.md](docs/deployment/quick-install.md) for detailed installation scenarios and troubleshooting.
+See [docs/deployment/setup-guide.md](docs/deployment/setup-guide.md) for manual deployment instructions.
 
 ## Documentation
 
