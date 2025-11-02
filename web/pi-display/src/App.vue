@@ -170,15 +170,20 @@
             getCreatureBackgroundClass(currentCreature.type)
           ]"
         >
-          <div class="text-2xl text-gray-300 mb-2">CURRENT TURN</div>
-          <div class="text-5xl font-bold mb-2">{{ currentCreature.name }}</div>
-          <div class="flex gap-4 text-2xl opacity-80">
-            <span>Initiative: {{ currentCreature.initiative }}</span>
-            <span v-if="currentCreature.hp !== undefined">
-              HP: {{ currentCreature.hp }}/{{ currentCreature.maxHp || '?' }}
-            </span>
+          <div class="text-2xl text-yellow-400 font-bold mb-4">CURRENT TURN</div>
+          <div class="flex items-center gap-4">
+            <div class="text-5xl font-bold bg-black/30 px-4 py-2 rounded-lg">
+              {{ currentCreature.initiative }}
+            </div>
+            <div class="flex-1">
+              <div class="text-5xl font-bold">{{ currentCreature.name }}</div>
+              <div class="text-2xl opacity-70 capitalize mt-1">{{ currentCreature.type }}</div>
+            </div>
+            <div v-if="currentCreature.hp !== undefined" class="text-3xl opacity-80">
+              {{ currentCreature.hp }}/{{ currentCreature.maxHp || '?' }}
+            </div>
           </div>
-          <div v-if="currentCreature.conditions && currentCreature.conditions.length > 0" class="mt-3 flex gap-2 flex-wrap">
+          <div v-if="currentCreature.conditions && currentCreature.conditions.length > 0" class="mt-4 flex gap-2 flex-wrap">
             <span
               v-for="condition in currentCreature.conditions"
               :key="condition"
