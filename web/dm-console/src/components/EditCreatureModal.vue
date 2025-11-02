@@ -97,6 +97,9 @@
             </div>
           </div>
 
+          <!-- Conditions -->
+          <ConditionSelector v-model="form.conditionEffects" />
+
           <!-- Action Buttons -->
           <div class="flex gap-3 pt-4">
             <button
@@ -122,7 +125,9 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
 import type { Creature } from '../types';
+import type { ConditionEffect } from '../types/conditions';
 import { resizeImage } from '../utils/imageResize';
+import ConditionSelector from './ConditionSelector.vue';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -140,7 +145,8 @@ const form = reactive({
   type: 'monster' as 'player' | 'npc' | 'monster',
   hp: undefined as number | undefined,
   maxHp: undefined as number | undefined,
-  imageUrl: ''
+  imageUrl: '',
+  conditionEffects: [] as ConditionEffect[]
 });
 
 watch(() => props.creature, (newCreature) => {
@@ -151,6 +157,7 @@ watch(() => props.creature, (newCreature) => {
     form.hp = newCreature.hp;
     form.maxHp = newCreature.maxHp;
     form.imageUrl = newCreature.imageUrl || '';
+    form.conditionEffects = newCreature.conditionEffects || [];
   }
 }, { immediate: true });
 
@@ -183,7 +190,8 @@ const handleSubmit = () => {
     type: form.type,
     hp: form.hp,
     maxHp: form.maxHp,
-    imageUrl: form.imageUrl || undefined
+    imageUrl: form.imageUrl || undefined,
+    conditionEffects: form.conditionEffects
   };
 
   emit('save', props.creature.id, updates);

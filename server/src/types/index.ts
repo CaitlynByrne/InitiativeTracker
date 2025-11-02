@@ -2,6 +2,8 @@
  * Core type definitions for the Initiative Tracker system
  */
 
+import { ConditionEffect } from './conditions';
+
 export type CreatureType = 'player' | 'npc' | 'monster';
 
 export interface Creature {
@@ -11,7 +13,8 @@ export interface Creature {
   type: CreatureType;
   hp?: number;
   maxHp?: number;
-  conditions?: string[];
+  conditions?: string[]; // DEPRECATED: for backward compatibility
+  conditionEffects?: ConditionEffect[]; // NEW
   imageUrl?: string;  // URL or data URI for creature avatar
   device_id?: string;
 }

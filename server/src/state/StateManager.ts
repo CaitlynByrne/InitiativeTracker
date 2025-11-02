@@ -263,6 +263,19 @@ export class StateManager extends EventEmitter {
         }
       }
 
+      // Decrement condition durations for current creature
+      const currentCreature = state.creatures[state.currentTurnIndex];
+      if (currentCreature && currentCreature.conditionEffects) {
+        currentCreature.conditionEffects = currentCreature.conditionEffects
+          .map(effect => {
+            if (effect.duration !== undefined && effect.duration > 0) {
+              return { ...effect, duration: effect.duration - 1 };
+            }
+            return effect;
+          })
+          .filter(effect => effect.duration === undefined || effect.duration > 0);
+      }
+
       // Reset timer on turn change
       if (state.timer) {
         state.timer.isActive = false;

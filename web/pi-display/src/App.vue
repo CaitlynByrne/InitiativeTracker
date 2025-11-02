@@ -112,13 +112,14 @@
               </div>
 
               <!-- Conditions -->
-              <div v-if="creature.conditions && creature.conditions.length > 0" class="mt-2 flex gap-2 flex-wrap">
+              <div v-if="creature.conditionEffects && creature.conditionEffects.length > 0" class="mt-2 flex gap-2 flex-wrap">
                 <span
-                  v-for="condition in creature.conditions"
-                  :key="condition"
+                  v-for="effect in creature.conditionEffects"
+                  :key="effect.condition"
                   class="text-sm bg-yellow-800 text-yellow-200 px-2 py-1 rounded"
                 >
-                  {{ condition }}
+                  {{ effect.condition }}
+                  <span v-if="effect.duration" class="text-xs ml-1">({{ effect.duration }}r)</span>
                 </span>
               </div>
             </div>
@@ -201,13 +202,14 @@
               {{ currentCreature.hp }}/{{ currentCreature.maxHp || '?' }}
             </div>
           </div>
-          <div v-if="currentCreature.conditions && currentCreature.conditions.length > 0" class="mt-4 flex gap-2 flex-wrap">
+          <div v-if="currentCreature.conditionEffects && currentCreature.conditionEffects.length > 0" class="mt-4 flex gap-2 flex-wrap">
             <span
-              v-for="condition in currentCreature.conditions"
-              :key="condition"
+              v-for="effect in currentCreature.conditionEffects"
+              :key="effect.condition"
               class="text-xl bg-yellow-800 text-yellow-200 px-3 py-1 rounded-lg"
             >
-              {{ condition }}
+              {{ effect.condition }}
+              <span v-if="effect.duration" class="text-sm ml-1">({{ effect.duration }}r)</span>
             </span>
           </div>
         </div>
