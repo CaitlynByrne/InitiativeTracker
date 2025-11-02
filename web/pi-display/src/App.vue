@@ -56,6 +56,17 @@
                 </div>
                 <div v-else class="w-8"></div>
 
+                <!-- Avatar Image -->
+                <img
+                  v-if="creature.imageUrl"
+                  :src="creature.imageUrl"
+                  :alt="creature.name"
+                  :class="[
+                    'rounded object-cover',
+                    gameState.currentTurnIndex >= 0 && index === 0 ? 'w-16 h-16' : 'w-12 h-12'
+                  ]"
+                />
+
                 <!-- Initiative Badge -->
                 <div
                   :class="[
@@ -172,6 +183,13 @@
         >
           <div class="text-2xl text-yellow-400 font-bold mb-4">CURRENT TURN</div>
           <div class="flex items-center gap-4">
+            <!-- Avatar Image -->
+            <img
+              v-if="currentCreature.imageUrl"
+              :src="currentCreature.imageUrl"
+              :alt="currentCreature.name"
+              class="w-24 h-24 lg:w-32 lg:h-32 rounded-full object-cover border-4 border-white shadow-lg"
+            />
             <div class="text-5xl font-bold bg-black/30 px-4 py-2 rounded-lg">
               {{ currentCreature.initiative }}
             </div>
@@ -232,6 +250,13 @@
               ]"
             >
               <div class="flex items-center gap-4">
+                <!-- Avatar Image -->
+                <img
+                  v-if="creature.imageUrl"
+                  :src="creature.imageUrl"
+                  :alt="creature.name"
+                  class="w-12 h-12 rounded object-cover"
+                />
                 <div class="text-3xl font-bold bg-black/30 px-3 py-1 rounded-lg">
                   {{ creature.initiative }}
                 </div>

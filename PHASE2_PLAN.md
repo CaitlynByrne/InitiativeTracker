@@ -36,7 +36,7 @@
 
 ---
 
-## **TASK 1: Manual Session Save/Restore UI** (~3 hours)
+## **TASK 1: Manual Session Save/Restore UI** (~3 hours) ✅ COMPLETE
 
 **Priority:** High
 **Dependencies:** Backend session:save/restore events already complete
@@ -337,7 +337,7 @@ Add SessionManager component to a collapsible section or dedicated tab.
 
 ---
 
-## **TASK 2: Drag-and-Drop Initiative Reordering** (~4 hours)
+## **TASK 2: Drag-and-Drop Initiative Reordering** (~4 hours) ✅ COMPLETE
 
 **Priority:** High
 **Dependencies:** Backend `initiative:reorder` event already complete
@@ -522,7 +522,7 @@ Already implemented - verify `reorderInitiative` function exists and emits `init
 
 ---
 
-## **TASK 3: Creature Editing UI** (~6 hours)
+## **TASK 3: Creature Editing UI** (~6 hours) ✅ COMPLETE
 
 **Priority:** High
 **Dependencies:** Backend `creature:update` event
