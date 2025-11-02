@@ -71,7 +71,7 @@
                   <div
                     :class="[
                       'font-bold',
-                      gameState.currentTurnIndex >= 0 && index === 0 ? 'text-3xl' : 'text-2xl'
+                      gameState.currentTurnIndex >= 0 && index === 0 ? 'text-5xl' : 'text-3xl'
                     ]"
                   >
                     {{ creature.name }}

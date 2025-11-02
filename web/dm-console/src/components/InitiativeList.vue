@@ -6,6 +6,98 @@
       No creatures in initiative. Add some to get started!
     </div>
 
+    <!-- Rolodex View: Active Combat (current turn always at top) -->
+    <div v-else-if="currentRound > 0" class="space-y-2">
+      <div
+        v-for="(creature, displayIndex) in orderedCreatures"
+        :key="creature.id"
+        :class="[
+          'creature-card p-3 rounded border-2 transition-all',
+          displayIndex === 0
+            ? getActiveCreatureClass(creature.type)
+            : getCreatureClass(creature.type)
+        ]"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3 flex-1">
+            <!-- Current/Next Indicator -->
+            <div v-if="displayIndex === 0" class="text-yellow-400 font-bold animate-pulse">
+              ▶
+            </div>
+            <div v-else-if="displayIndex === 1" class="text-gray-400">
+              ⏭
+            </div>
+            <div v-else class="w-4"></div>
+
+            <!-- Avatar Image (if exists) -->
+            <img
+              v-if="creature.imageUrl"
+              :src="creature.imageUrl"
+              :alt="creature.name"
+              class="w-12 h-12 rounded object-cover"
+            />
+
+            <!-- Initiative Badge -->
+            <div class="initiative-badge bg-blue-600 text-white font-bold px-3 py-1 rounded">
+              {{ creature.initiative }}
+            </div>
+
+            <!-- Creature Info -->
+            <div class="flex-1">
+              <div class="creature-name font-bold text-white">
+                {{ creature.name }}
+                <span v-if="displayIndex === 0" class="ml-2 text-yellow-400 text-sm">
+                  (CURRENT)
+                </span>
+                <span v-else-if="displayIndex === 1" class="ml-2 text-gray-400 text-sm">
+                  (NEXT)
+                </span>
+              </div>
+              <div :class="['creature-type text-sm capitalize', getTypeTextColor(creature.type)]">
+                {{ creature.type }}
+              </div>
+            </div>
+          </div>
+
+          <!-- HP Display (if available) -->
+          <div v-if="creature.hp !== undefined" class="hp-display text-sm text-gray-300 mr-2">
+            HP: {{ creature.hp }}/{{ creature.maxHp }}
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-1">
+            <button
+              @click="$emit('edit', creature.id)"
+              class="edit-btn text-blue-400 hover:text-blue-300 px-2 py-1"
+              title="Edit creature"
+            >
+              ✎
+            </button>
+            <button
+              @click="$emit('remove', creature.id)"
+              class="remove-btn text-red-400 hover:text-red-300 px-2 py-1"
+              title="Remove creature"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <!-- Conditions (if any) -->
+        <div v-if="creature.conditions && creature.conditions.length > 0"
+             class="conditions mt-2 flex gap-1 flex-wrap">
+          <span
+            v-for="condition in creature.conditions"
+            :key="condition"
+            class="condition-tag text-xs bg-yellow-800 text-yellow-200 px-2 py-1 rounded"
+          >
+            {{ condition }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drag-and-Drop View: Pre-Combat Setup -->
     <draggable
       v-else
       v-model="localCreatures"
@@ -17,13 +109,11 @@
       chosen-class="chosen"
       drag-class="dragging"
     >
-      <template #item="{ element: creature, index }">
+      <template #item="{ element: creature }">
         <div
           :class="[
             'creature-card p-3 rounded border-2 transition-all',
-            index === currentTurnIndex
-              ? getActiveCreatureClass(creature.type)
-              : getCreatureClass(creature.type)
+            getCreatureClass(creature.type)
           ]"
         >
           <div class="flex items-center justify-between">
@@ -35,11 +125,7 @@
             </div>
 
             <div class="flex items-center gap-3 flex-1">
-              <!-- Current/Next Indicator -->
-              <div v-if="currentRound > 0 && index === currentTurnIndex" class="text-yellow-400 font-bold animate-pulse">
-                ▶
-              </div>
-              <div v-else class="w-4"></div>
+              <div class="w-4"></div>
 
               <!-- Avatar Image (if exists) -->
               <img
@@ -58,9 +144,6 @@
               <div class="flex-1">
                 <div class="creature-name font-bold text-white">
                   {{ creature.name }}
-                  <span v-if="index === currentTurnIndex" class="ml-2 text-green-400">
-                    ← ACTIVE
-                  </span>
                 </div>
                 <div :class="['creature-type text-sm capitalize', getTypeTextColor(creature.type)]">
                   {{ creature.type }}
@@ -110,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import draggable from 'vuedraggable';
 import type { Creature } from '../types';
 
@@ -138,6 +221,23 @@ const handleReorder = (event: any) => {
     emit('reorder', event.oldIndex, event.newIndex);
   }
 };
+
+// Reorder creatures so current is first (rolodex view for active combat)
+const orderedCreatures = computed(() => {
+  const creatures = [...props.creatures];
+  const currentIndex = props.currentTurnIndex;
+
+  // If combat hasn't started yet, return creatures in their current order
+  if (currentIndex < 0 || props.currentRound === 0) {
+    return creatures;
+  }
+
+  // Reorder array so current is first, followed by upcoming turns
+  return [
+    ...creatures.slice(currentIndex),
+    ...creatures.slice(0, currentIndex)
+  ];
+});
 
 // Get creature class based on type (inactive state)
 const getCreatureClass = (type: string): string => {
