@@ -22,7 +22,8 @@
       "Bash(npm test:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(ipconfig:*)"
     ],
     "deny": [],
     "ask": []
