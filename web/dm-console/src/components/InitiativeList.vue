@@ -53,15 +53,43 @@
                   (NEXT)
                 </span>
               </div>
+              <div v-if="creature.hp === 0" class="text-red-500 font-bold text-sm">
+                DOWN
+              </div>
               <div :class="['creature-type text-sm capitalize', getTypeTextColor(creature.type)]">
                 {{ creature.type }}
               </div>
             </div>
           </div>
 
-          <!-- HP Display (if available) -->
-          <div v-if="creature.hp !== undefined" class="hp-display text-sm text-gray-300 mr-2">
-            HP: {{ creature.hp }}/{{ creature.maxHp }}
+          <!-- HP Display and Modification (if available) -->
+          <div v-if="creature.hp !== undefined" class="hp-controls flex flex-col items-end gap-1 mr-2">
+            <div class="hp-display text-sm text-gray-300">
+              HP: {{ creature.hp }}/{{ creature.maxHp }}
+            </div>
+            <div class="hp-modifier flex items-center gap-1">
+              <input
+                type="number"
+                v-model.number="healthChanges[creature.id]"
+                class="health-input w-16 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
+                placeholder="0"
+                min="0"
+              />
+              <button
+                @click="modifyHealth(creature.id, healthChanges[creature.id] || 0)"
+                class="hp-add-btn bg-green-600 hover:bg-green-500 text-white px-2 py-0.5 text-xs rounded font-bold"
+                title="Add HP"
+              >
+                +
+              </button>
+              <button
+                @click="modifyHealth(creature.id, -(healthChanges[creature.id] || 0))"
+                class="hp-subtract-btn bg-red-600 hover:bg-red-500 text-white px-2 py-0.5 text-xs rounded font-bold"
+                title="Subtract HP"
+              >
+                −
+              </button>
+            </div>
           </div>
 
           <!-- Action Buttons -->
@@ -146,15 +174,43 @@
                 <div class="creature-name font-bold text-white">
                   {{ creature.name }}
                 </div>
+                <div v-if="creature.hp === 0" class="text-red-500 font-bold text-sm">
+                  DOWN
+                </div>
                 <div :class="['creature-type text-sm capitalize', getTypeTextColor(creature.type)]">
                   {{ creature.type }}
                 </div>
               </div>
             </div>
 
-            <!-- HP Display (if available) -->
-            <div v-if="creature.hp !== undefined" class="hp-display text-sm text-gray-300 mr-2">
-              HP: {{ creature.hp }}/{{ creature.maxHp }}
+            <!-- HP Display and Modification (if available) -->
+            <div v-if="creature.hp !== undefined" class="hp-controls flex flex-col items-end gap-1 mr-2">
+              <div class="hp-display text-sm text-gray-300">
+                HP: {{ creature.hp }}/{{ creature.maxHp }}
+              </div>
+              <div class="hp-modifier flex items-center gap-1">
+                <input
+                  type="number"
+                  v-model.number="healthChanges[creature.id]"
+                  class="health-input w-16 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
+                  placeholder="0"
+                  min="0"
+                />
+                <button
+                  @click="modifyHealth(creature.id, healthChanges[creature.id] || 0)"
+                  class="hp-add-btn bg-green-600 hover:bg-green-500 text-white px-2 py-0.5 text-xs rounded font-bold"
+                  title="Add HP"
+                >
+                  +
+                </button>
+                <button
+                  @click="modifyHealth(creature.id, -(healthChanges[creature.id] || 0))"
+                  class="hp-subtract-btn bg-red-600 hover:bg-red-500 text-white px-2 py-0.5 text-xs rounded font-bold"
+                  title="Subtract HP"
+                >
+                  −
+                </button>
+              </div>
             </div>
 
             <!-- Action Buttons -->
@@ -195,7 +251,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, reactive } from 'vue';
 import draggable from 'vuedraggable';
 import type { Creature } from '../types';
 
@@ -209,9 +265,13 @@ const emit = defineEmits<{
   (e: 'remove', id: string): void;
   (e: 'edit', id: string): void;
   (e: 'reorder', fromIndex: number, toIndex: number): void;
+  (e: 'modify-health', id: string, amount: number): void;
 }>();
 
 const localCreatures = ref<Creature[]>([...props.creatures]);
+
+// Track health changes per creature
+const healthChanges = reactive<Record<string, number>>({});
 
 // Sync local creatures with props
 watch(() => props.creatures, (newCreatures) => {
@@ -221,6 +281,15 @@ watch(() => props.creatures, (newCreatures) => {
 const handleReorder = (event: any) => {
   if (event.oldIndex !== event.newIndex) {
     emit('reorder', event.oldIndex, event.newIndex);
+  }
+};
+
+// Modify creature health
+const modifyHealth = (creatureId: string, amount: number) => {
+  if (amount !== 0) {
+    emit('modify-health', creatureId, amount);
+    // Reset the input field after modification
+    healthChanges[creatureId] = 0;
   }
 };
 

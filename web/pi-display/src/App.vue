@@ -89,6 +89,9 @@
                     <span v-if="gameState.currentTurnIndex >= 0 && index === 0" class="text-xl text-yellow-400 ml-2">(CURRENT)</span>
                     <span v-else-if="gameState.currentTurnIndex >= 0 && index === 1" class="text-lg text-gray-400 ml-2">(NEXT)</span>
                   </div>
+                  <div v-if="creature.hp === 0" class="text-red-500 font-bold text-xl">
+                    DOWN
+                  </div>
                   <div
                     :class="[
                       'opacity-70 capitalize',
@@ -196,6 +199,9 @@
             </div>
             <div class="flex-1">
               <div class="text-5xl font-bold">{{ currentCreature.name }}</div>
+              <div v-if="currentCreature.hp === 0" class="text-red-500 font-bold text-2xl mt-1">
+                DOWN
+              </div>
               <div class="text-2xl opacity-70 capitalize mt-1">{{ currentCreature.type }}</div>
             </div>
             <div v-if="currentCreature.hp !== undefined" class="text-3xl opacity-80">
@@ -266,6 +272,9 @@
                   <div class="text-3xl font-bold">
                     {{ creature.name }}
                     <span v-if="gameState.currentTurnIndex >= 0 && index === 0" class="text-2xl text-gray-400 ml-3">(NEXT)</span>
+                  </div>
+                  <div v-if="creature.hp === 0" class="text-red-500 font-bold text-lg">
+                    DOWN
                   </div>
                   <div class="text-xl opacity-70 capitalize">{{ creature.type }}</div>
                 </div>

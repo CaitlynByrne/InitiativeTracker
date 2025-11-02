@@ -40,6 +40,7 @@
           @remove="removeCreature"
           @reorder="reorderInitiative"
           @edit="handleEdit"
+          @modify-health="handleModifyHealth"
         />
       </div>
 
@@ -128,5 +129,17 @@ const handleEdit = (id: string) => {
 const handleUpdateCreature = (id: string, updates: Partial<Creature>) => {
   updateCreature(id, updates);
   editingCreature.value = null;
+};
+
+const handleModifyHealth = (id: string, amount: number) => {
+  const creature = gameState.value.creatures.find(c => c.id === id);
+  if (!creature || creature.hp === undefined || creature.maxHp === undefined) {
+    return;
+  }
+
+  // Calculate new HP, ensuring it stays within bounds (0 to maxHp)
+  const newHp = Math.max(0, Math.min(creature.maxHp, creature.hp + amount));
+
+  updateCreature(id, { hp: newHp });
 };
 </script>
