@@ -23,8 +23,9 @@ services:
       context: ../server
       dockerfile: Dockerfile
     container_name: initiative-server
-    ports:
-      - "3000:3000"
+    # Port removed - only accessible via nginx
+    expose:
+      - "3000"
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
@@ -39,6 +40,66 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # DM Console Web Application (Production)
+  dm-console:
+    build:
+      context: ../web/dm-console
+      dockerfile: Dockerfile
+    container_name: initiative-dm-console
+    expose:
+      - "80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  # Pi Display Web Application (Production)
+  pi-display:
+    build:
+      context: ../web/pi-display
+      dockerfile: Dockerfile
+    container_name: initiative-pi-display
+    expose:
+      - "80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy for DNS routing
+  nginx:
+    image: nginx:alpine
+    container_name: initiative-nginx
+    ports:
+      - "0.0.0.0:80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - server
+      - dm-console
+      - pi-display
+    restart: unless-stopped
+
+  # dnsmasq - Local DNS server for .initiative domain resolution
+  dnsmasq:
+    image: jpillora/dnsmasq
+    container_name: initiative-dns
+    ports:
+      - "0.0.0.0:53:53/udp"
+      - "0.0.0.0:53:53/tcp"
+    volumes:
+      - ./dnsmasq.conf:/etc/dnsmasq.conf:ro
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   redis-data:

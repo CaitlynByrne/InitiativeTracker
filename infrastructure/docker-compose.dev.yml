@@ -6,7 +6,7 @@ services:
     image: redis:7-alpine
     container_name: initiative-redis-dev
     ports:
-      - "6379:6379"
+      - "0.0.0.0:6379:6379"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: initiative-server-dev
     ports:
-      - "3000:3000"
+      - "0.0.0.0:3000:3000"
     environment:
       - NODE_ENV=development
       - REDIS_URL=redis://redis:6379
@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: initiative-dm-console-dev
     ports:
-      - "5173:5173"
+      - "0.0.0.0:5173:5173"
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:3000
@@ -65,7 +65,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: initiative-pi-display-dev
     ports:
-      - "5174:5173"
+      - "0.0.0.0:5174:5173"
     environment:
       - NODE_ENV=development
       - VITE_SERVER_URL=http://localhost:3000
