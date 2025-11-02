@@ -6,14 +6,15 @@
     <div v-if="modelValue && modelValue.length > 0" class="flex flex-wrap gap-2 mb-3">
       <div
         v-for="(effect, index) in modelValue"
-        :key="index"
+        :key="effect.condition"
         class="flex items-center gap-2 bg-yellow-800 text-yellow-200 px-3 py-1 rounded-lg"
       >
         <span class="font-medium">{{ effect.condition }}</span>
         <span v-if="effect.duration" class="text-xs opacity-75">{{ effect.duration }}r</span>
         <button
           @click="removeCondition(index)"
-          class="hover:text-yellow-100"
+          class="ml-2 text-yellow-100 hover:text-white font-bold text-lg leading-none cursor-pointer transition-colors"
+          title="Remove condition"
           type="button"
         >
           
