@@ -273,6 +273,18 @@
                   {{ creature.hp }}/{{ creature.maxHp || '?' }}
                 </div>
               </div>
+
+              <!-- Conditions -->
+              <div v-if="creature.conditionEffects && creature.conditionEffects.length > 0" class="mt-3 flex gap-2 flex-wrap">
+                <span
+                  v-for="effect in creature.conditionEffects"
+                  :key="effect.condition"
+                  class="text-base bg-yellow-800 text-yellow-200 px-2 py-1 rounded"
+                >
+                  {{ effect.condition }}
+                  <span v-if="effect.duration" class="text-sm ml-1">({{ effect.duration }}r)</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>

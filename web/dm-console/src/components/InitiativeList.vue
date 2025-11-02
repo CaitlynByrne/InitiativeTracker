@@ -84,14 +84,15 @@
         </div>
 
         <!-- Conditions (if any) -->
-        <div v-if="creature.conditions && creature.conditions.length > 0"
+        <div v-if="creature.conditionEffects && creature.conditionEffects.length > 0"
              class="conditions mt-2 flex gap-1 flex-wrap">
           <span
-            v-for="condition in creature.conditions"
-            :key="condition"
+            v-for="effect in creature.conditionEffects"
+            :key="effect.condition"
             class="condition-tag text-xs bg-yellow-800 text-yellow-200 px-2 py-1 rounded"
           >
-            {{ condition }}
+            {{ effect.condition }}
+            <span v-if="effect.duration" class="text-xs ml-1">({{ effect.duration }}r)</span>
           </span>
         </div>
       </div>
@@ -176,14 +177,15 @@
           </div>
 
           <!-- Conditions (if any) -->
-          <div v-if="creature.conditions && creature.conditions.length > 0"
+          <div v-if="creature.conditionEffects && creature.conditionEffects.length > 0"
                class="conditions mt-2 flex gap-1 flex-wrap">
             <span
-              v-for="condition in creature.conditions"
-              :key="condition"
+              v-for="effect in creature.conditionEffects"
+              :key="effect.condition"
               class="condition-tag text-xs bg-yellow-800 text-yellow-200 px-2 py-1 rounded"
             >
-              {{ condition }}
+              {{ effect.condition }}
+              <span v-if="effect.duration" class="text-xs ml-1">({{ effect.duration }}r)</span>
             </span>
           </div>
         </div>
