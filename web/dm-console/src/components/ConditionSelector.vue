@@ -16,9 +16,7 @@
           class="ml-2 text-yellow-100 hover:text-white font-bold text-lg leading-none cursor-pointer transition-colors"
           title="Remove condition"
           type="button"
-        >
-          
-        </button>
+        >✕</button>
       </div>
     </div>
 
