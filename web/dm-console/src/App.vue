@@ -38,6 +38,8 @@
           :current-turn-index="gameState.currentTurnIndex"
           :current-round="gameState.currentRound"
           @remove="removeCreature"
+          @reorder="reorderInitiative"
+          @edit="handleEdit"
         />
       </div>
 
@@ -87,6 +89,7 @@ const {
   startTimer,
   stopTimer,
   resetSession,
+  reorderInitiative,
   saveSession,
   restoreSession,
   listSessions,
@@ -101,5 +104,10 @@ const handleSessionList = () => {
   setTimeout(() => {
     sessionManagerRef.value?.updateSessions(savedSessions.value);
   }, 100);
+};
+
+const handleEdit = (id: string) => {
+  console.log('Edit creature:', id);
+  // Will be implemented in Task 3
 };
 </script>
