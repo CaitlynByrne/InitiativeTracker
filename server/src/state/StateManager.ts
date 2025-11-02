@@ -392,6 +392,33 @@ export class StateManager extends EventEmitter {
   }
 
   /**
+   * Sort creatures by initiative (descending)
+   * Preserves current turn creature
+   */
+  private sortCreatures(): void {
+    const currentCreature = this.state.currentTurnIndex >= 0
+      ? this.state.creatures[this.state.currentTurnIndex]
+      : null;
+
+    // Sort by initiative (descending), then by type priority (ascending)
+    this.state.creatures.sort((a, b) => {
+      if (b.initiative !== a.initiative) {
+        return b.initiative - a.initiative;
+      }
+      // Tie-breaker: use type priority
+      return this.getTypePriority(a.type) - this.getTypePriority(b.type);
+    });
+
+    // Find new index of current creature
+    if (currentCreature) {
+      const newIndex = this.state.creatures.findIndex(c => c.id === currentCreature.id);
+      if (newIndex !== -1) {
+        this.state.currentTurnIndex = newIndex;
+      }
+    }
+  }
+
+  /**
    * Update creature properties
    */
   updateCreature(id: string, updates: Partial<Creature>): StateUpdateResult {
@@ -413,8 +440,16 @@ export class StateManager extends EventEmitter {
       return { success: false, error: validationError };
     }
 
+    const initiativeChanged = updates.initiative !== undefined &&
+      updates.initiative !== this.state.creatures[index].initiative;
+
     this.updateState((state) => {
       state.creatures[index] = creature;
+
+      // Re-sort if initiative changed
+      if (initiativeChanged) {
+        this.sortCreatures();
+      }
     });
 
     return { success: true, state: this.getState() };

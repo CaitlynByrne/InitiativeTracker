@@ -68,6 +68,14 @@
         @list="handleSessionList"
       />
     </div>
+
+    <!-- Edit Creature Modal -->
+    <EditCreatureModal
+      :is-open="editingCreature !== null"
+      :creature="editingCreature"
+      @close="editingCreature = null"
+      @save="handleUpdateCreature"
+    />
   </div>
 </template>
 
@@ -78,6 +86,8 @@ import InitiativeList from './components/InitiativeList.vue';
 import AddCreatureForm from './components/AddCreatureForm.vue';
 import ControlPanel from './components/ControlPanel.vue';
 import SessionManager from './components/SessionManager.vue';
+import EditCreatureModal from './components/EditCreatureModal.vue';
+import type { Creature } from './types';
 
 const {
   gameState,
@@ -94,7 +104,8 @@ const {
   restoreSession,
   listSessions,
   deleteSession,
-  savedSessions
+  savedSessions,
+  updateCreature
 } = useGameState();
 
 const sessionManagerRef = ref<InstanceType<typeof SessionManager> | null>(null);
@@ -106,8 +117,14 @@ const handleSessionList = () => {
   }, 100);
 };
 
+const editingCreature = ref<Creature | null>(null);
+
 const handleEdit = (id: string) => {
-  console.log('Edit creature:', id);
-  // Will be implemented in Task 3
+  editingCreature.value = gameState.value.creatures.find(c => c.id === id) || null;
+};
+
+const handleUpdateCreature = (id: string, updates: Partial<Creature>) => {
+  updateCreature(id, updates);
+  editingCreature.value = null;
 };
 </script>

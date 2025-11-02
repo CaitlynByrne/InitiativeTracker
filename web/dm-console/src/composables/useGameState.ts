@@ -106,6 +106,15 @@ export function useGameState() {
     });
   };
 
+  const updateCreature = (id: string, updates: Partial<Creature>) => {
+    socket.value?.emit('creature:update', { id, updates }, (response: any) => {
+      if (!response.success) {
+        error.value = response.error || 'Failed to update creature';
+        setTimeout(() => error.value = null, 5000);
+      }
+    });
+  };
+
   onMounted(() => {
     connect();
   });
@@ -129,6 +138,7 @@ export function useGameState() {
     restoreSession,
     listSessions,
     deleteSession,
-    savedSessions
+    savedSessions,
+    updateCreature
   };
 }

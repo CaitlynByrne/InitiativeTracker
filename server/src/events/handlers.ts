@@ -46,6 +46,9 @@ export class EventHandlers {
     socket.on('creature:remove', (data: { id: string }, callback?: (result: any) => void) =>
       this.handleCreatureRemove(socket, data, callback)
     );
+    socket.on('creature:update', (data: { id: string; updates: Partial<Creature> }, callback?: (result: any) => void) =>
+      this.handleCreatureUpdate(socket, data, callback)
+    );
 
     // Turn management
     socket.on('turn:next', () => this.handleTurnNext(socket));
@@ -168,6 +171,41 @@ export class EventHandlers {
       const errorResponse = {
         message: error.message || 'Internal server error',
         event: 'creature:remove'
+      };
+      socket.emit('error', errorResponse);
+      if (callback) callback({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Handle update creature
+   */
+  private handleCreatureUpdate(socket: Socket, data: { id: string; updates: Partial<Creature> }, callback?: (result: any) => void): void {
+    try {
+      logger.info(`Updating creature: ${data.id}`, data.updates);
+
+      const result = this.stateManager.updateCreature(data.id, data.updates);
+
+      if (!result.success) {
+        const errorResponse = {
+          message: result.error?.message || 'Failed to update creature',
+          code: 'VALIDATION_ERROR',
+          details: result.error,
+          event: 'creature:update'
+        };
+        socket.emit('error', errorResponse);
+        if (callback) callback({ success: false, error: errorResponse.message });
+        return;
+      }
+
+      // If initiative changed, creatures are automatically re-sorted by StateManager
+      logger.info(`Creature updated: ${data.id}`);
+      if (callback) callback({ success: true });
+    } catch (error: any) {
+      logger.error('Error in creature:update:', error);
+      const errorResponse = {
+        message: error.message || 'Internal server error',
+        event: 'creature:update'
       };
       socket.emit('error', errorResponse);
       if (callback) callback({ success: false, error: error.message });
