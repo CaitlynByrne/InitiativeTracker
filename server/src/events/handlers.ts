@@ -76,6 +76,14 @@ export class EventHandlers {
       this.handleSessionDelete(socket, data, callback)
     );
 
+    // History & Undo
+    socket.on('state:undo', (callback?: (result: any) => void) =>
+      this.handleUndo(socket, callback)
+    );
+    socket.on('state:history', (callback?: (result: any) => void) =>
+      this.handleHistory(socket, callback)
+    );
+
     // Player turn management
     socket.on('turn:end', (data: { creatureId: string }) => this.handleTurnEnd(socket, data));
   }
@@ -532,6 +540,50 @@ export class EventHandlers {
       }
     } catch (error: any) {
       logger.error('Error deleting session:', error);
+      if (callback) {
+        callback({ success: false, error: error.message });
+      }
+    }
+  }
+
+  /**
+   * Handle undo request
+   */
+  private handleUndo(_socket: Socket, callback?: (result: any) => void): void {
+    try {
+      const previousState = this.stateManager.undo();
+
+      if (previousState) {
+        logger.info('State reverted via undo');
+        if (callback) {
+          callback({ success: true });
+        }
+      } else {
+        const message = 'No history available to undo';
+        logger.warn(message);
+        if (callback) {
+          callback({ success: false, message });
+        }
+      }
+    } catch (error: any) {
+      logger.error('Error during undo:', error);
+      if (callback) {
+        callback({ success: false, error: error.message });
+      }
+    }
+  }
+
+  /**
+   * Handle history request
+   */
+  private handleHistory(_socket: Socket, callback?: (result: any) => void): void {
+    try {
+      const history = this.stateManager.getHistory();
+      if (callback) {
+        callback({ success: true, history });
+      }
+    } catch (error: any) {
+      logger.error('Error getting history:', error);
       if (callback) {
         callback({ success: false, error: error.message });
       }

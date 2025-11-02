@@ -12,11 +12,19 @@ import { ValidationUtils } from '../utils/validation';
 import { RedisClient } from '../persistence/RedisClient';
 import { logger } from '../utils/logger';
 
+interface StateSnapshot {
+  state: GameState;
+  timestamp: string;
+  action: string; // "turn_advance", "creature_added", etc.
+}
+
 export class StateManager extends EventEmitter {
   private static instance: StateManager;
   private state: GameState;
   private redis: RedisClient;
   private readonly STATE_KEY = 'initiative-tracker:state';
+  private history: StateSnapshot[] = [];
+  private maxHistory: number = 10;
 
   private constructor() {
     super();
@@ -142,6 +150,8 @@ export class StateManager extends EventEmitter {
       name: creatureData.name.trim(),
     };
 
+    this.saveSnapshot('creature_added');
+
     this.updateState((state) => {
       // Find the correct position for the creature
       // Sort by initiative (descending), then by type priority (ascending)
@@ -209,6 +219,8 @@ export class StateManager extends EventEmitter {
       };
     }
 
+    this.saveSnapshot('creature_removed');
+
     this.updateState((state) => {
       state.creatures.splice(creatureIndex, 1);
 
@@ -247,6 +259,8 @@ export class StateManager extends EventEmitter {
         },
       };
     }
+
+    this.saveSnapshot('turn_advance');
 
     this.updateState((state) => {
       // If combat hasn't started yet, start it
@@ -484,5 +498,53 @@ export class StateManager extends EventEmitter {
       return undefined;
     }
     return this.state.creatures[this.state.currentTurnIndex];
+  }
+
+  /**
+   * Save a snapshot of the current state to history
+   */
+  private saveSnapshot(action: string): void {
+    const snapshot: StateSnapshot = {
+      state: JSON.parse(JSON.stringify(this.state)), // deep clone
+      timestamp: new Date().toISOString(),
+      action
+    };
+
+    this.history.push(snapshot);
+
+    // Keep only last N snapshots
+    if (this.history.length > this.maxHistory) {
+      this.history.shift();
+    }
+  }
+
+  /**
+   * Undo last action and restore previous state
+   */
+  undo(): GameState | null {
+    if (this.history.length === 0) {
+      return null;
+    }
+
+    const snapshot = this.history.pop();
+    if (!snapshot) return null;
+
+    this.state = snapshot.state;
+    this.emit('stateChanged', this.getState());
+    this.saveToRedis().catch((err) => {
+      logger.error('Failed to save state to Redis after undo', err);
+    });
+
+    return this.getState();
+  }
+
+  /**
+   * Get history metadata (without full state objects)
+   */
+  getHistory(): Array<{ timestamp: string; action: string }> {
+    return this.history.map(s => ({
+      timestamp: s.timestamp,
+      action: s.action
+    }));
   }
 }

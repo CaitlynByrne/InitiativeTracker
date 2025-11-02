@@ -19,9 +19,17 @@
     <button
       @click="$emit('nextTurn')"
       :disabled="creatures.length === 0"
-      class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded mb-4 transition-colors"
+      class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded mb-2 transition-colors"
     >
       {{ currentRound === 0 ? 'Start Combat →' : 'Next Turn →' }}
+    </button>
+
+    <!-- Undo Button -->
+    <button
+      @click="$emit('undo')"
+      class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded mb-4 transition-colors"
+    >
+      ↶ Undo Last Action
     </button>
 
     <!-- Timer Controls -->
@@ -80,6 +88,7 @@ defineEmits<{
   (e: 'startTimer', seconds: number): void;
   (e: 'stopTimer'): void;
   (e: 'reset'): void;
+  (e: 'undo'): void;
 }>();
 
 const currentCreature = computed(() => {

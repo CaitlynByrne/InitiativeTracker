@@ -54,6 +54,7 @@
           @start-timer="startTimer"
           @stop-timer="stopTimer"
           @reset="resetSession"
+          @undo="undo"
         />
       </div>
     </div>
@@ -105,7 +106,8 @@ const {
   listSessions,
   deleteSession,
   savedSessions,
-  updateCreature
+  updateCreature,
+  undo
 } = useGameState();
 
 const sessionManagerRef = ref<InstanceType<typeof SessionManager> | null>(null);

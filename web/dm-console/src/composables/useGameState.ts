@@ -115,6 +115,15 @@ export function useGameState() {
     });
   };
 
+  const undo = () => {
+    socket.value?.emit('state:undo', (response: any) => {
+      if (!response.success) {
+        error.value = response.message || 'Nothing to undo';
+        setTimeout(() => error.value = null, 3000);
+      }
+    });
+  };
+
   onMounted(() => {
     connect();
   });
@@ -139,6 +148,7 @@ export function useGameState() {
     listSessions,
     deleteSession,
     savedSessions,
-    updateCreature
+    updateCreature,
+    undo
   };
 }
